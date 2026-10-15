@@ -181,8 +181,8 @@ def main() -> None:
     spr, shared = sprites.convert(ep.header, ep.sprite_data)
     (ASSETS / "sprites.prg").write_bytes(sprite_bank(spr, font_bytes(ep.header, ep.latch)))
     sprites.sheet(spr, shared).save(ASSETS / "preview_sprites.png")
-    (GENERATED / "sprites.asm").write_text(sprites_asm(spr, shared, ep.header))
-    (GENERATED / "sounds.asm").write_text(sounds_asm(ep.sounds))
+    (GENERATED / "gen_sprites.asm").write_text(sprites_asm(spr, shared, ep.header))
+    (GENERATED / "gen_sounds.asm").write_text(sounds_asm(ep.sounds))
 
     report["sprites"] = {"pieces": sum(len(s.pieces) for s in spr), "shared": shared}
     (ASSETS / "report.json").write_text(json.dumps(report, indent=2))

@@ -26,14 +26,14 @@ scroll_test:
     sei
     lda #0
     sta render_row_no
-    TimerRead(t_start)
+    TimerRead(tm_start)
     jsr render_row
-    TimerRead(t_end)
-    TimerMax(t_start, t_end, stat_row_cycles)
-    TimerRead(t_start)
+    TimerRead(tm_end)
+    TimerMax(tm_start, tm_end, stat_row_cycles)
+    TimerRead(tm_start)
     jsr colour_screen_a
-    TimerRead(t_end)
-    TimerMax(t_start, t_end, stat_colour_cycles)
+    TimerRead(tm_end)
+    TimerMax(tm_start, tm_end, stat_colour_cycles)
     jsr scroll_init               // undo the test row render
     cli
     jsr wait_frame
@@ -59,10 +59,10 @@ test_loop:
     beq !++
 !:  inc stat_lag_frames
 !:  jsr anim_update
-    TimerRead(t_start)
+    TimerRead(tm_start)
     jsr render_step
-    TimerRead(t_end)
-    TimerMax(t_start, t_end, stat_max_render_step)
+    TimerRead(tm_end)
+    TimerMax(tm_start, tm_end, stat_max_render_step)
     inc test_step
     bne !+
     inc test_step + 1
@@ -176,8 +176,8 @@ cam_add_y:
 
 .segment Vars
 test_step:          .word 0
-t_start:            .word 0
-t_end:              .word 0
+tm_start:            .word 0
+tm_end:              .word 0
 test_stats:
 stat_lost_frames:   .byte 0
 stat_lag_frames:    .byte 0

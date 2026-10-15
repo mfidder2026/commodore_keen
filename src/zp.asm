@@ -13,3 +13,28 @@
 .label zp_irq_ptr    = $0f         // pointer used only inside the IRQ (2 bytes)
 .label zp_tiles      = $11         // 20 tile numbers of the row being rendered ($11-$24)
 .label zp_game       = $30         // $30-$7f: game logic (see game/*.asm)
+
+// Player (game/player.asm). Positions in 1/16 pixel, sprite top-left corner.
+.label p_x           = $30         // 2 bytes
+.label p_y           = $32         // 2 bytes
+.label p_vx          = $34         // signed
+.label p_vy          = $35         // signed
+.label p_ground      = $36         // 1 = standing on something
+.label p_facing      = $37         // 0 = right, 1 = left
+.label p_sprite      = $38         // Keen sprite number to show
+.label p_anim        = $39         // animation tick counter
+.label p_pogo        = $3a         // 1 = on the pogo stick
+.label joy           = $3b         // input bits, 1 = pressed (see game/input.asm)
+.label joy_prev      = $3c
+.label joy_new       = $3d         // pressed this tick
+.label c_tmp         = $3e         // collision temporaries ($3e-$4f)
+.label box_left      = $40         // collision box in pixels (2 bytes each)
+.label box_right     = $42
+.label box_top       = $44
+.label box_bottom    = $46
+.label t_col         = $48         // tile column / row being tested
+.label t_row         = $49
+.label t_end         = $4a
+.label new_x         = $4b         // 2 bytes
+.label new_y         = $4d         // 2 bytes
+.label p_has_pogo    = $4f

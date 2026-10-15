@@ -3,7 +3,8 @@
 
 #import "memory.asm"
 #import "zp.asm"
-#import "sprites.asm"            // generated: build/generated/sprites.asm
+.segment Code
+#import "gen_sprites.asm"        // generated tables: build/generated (tools/convert/export.py)
 #import "engine/system.asm"
 #import "engine/exodecrunch.asm"
 #import "engine/irq.asm"
@@ -11,6 +12,10 @@
 #import "engine/scroll.asm"
 #import "engine/sprites.asm"
 #import "engine/timing.asm"
+#import "game/physics.asm"
+#import "game/input.asm"
+#import "game/player.asm"
+#import "game/game.asm"
 
 .encoding "petscii_upper"
 
@@ -48,9 +53,19 @@ start:
     jsr load_sprite_bank
 #if SCROLLTEST
     jmp scroll_test
-#else
+#elif PLAYERTEST
+    jmp player_test
+#elif SCROLLDEMO
     jmp scroll_demo
+#else
+    jmp game_main
 #endif
+
+// Until the world map exists (M7): play level 1 over and over.
+game_main:
+    lda #1
+    jsr play_level
+    jmp game_main
 
 // M3 demo: scroll through a level with the joystick in port 2; fire loads the next level.
 scroll_demo:
@@ -128,6 +143,9 @@ demo_levels_end:
 
 #if SCROLLTEST
 #import "../tests/scenarios/m3_scroll.asm"
+#endif
+#if PLAYERTEST
+#import "../tests/scenarios/m4_player.asm"
 #endif
 
 .segment Vars

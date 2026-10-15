@@ -68,17 +68,18 @@ def capture(hwnd: int) -> Image.Image:
 
 def to_ega(shot: Image.Image) -> Image.Image:
     """Sample the 320x200 screen at pixel centres and snap each pixel to the nearest EGA colour."""
+    import numpy as np
     from convert.ega import PALETTE
     w, h = shot.size
     scale = min(w / 320, h / 200)
     left = (w - 320 * scale) / 2
     top = (h - 200 * scale) / 2
-    out = Image.new("RGB", (320, 200))
-    for y in range(200):
-        for x in range(320):
-            r, g, b = shot.getpixel((int(left + (x + 0.5) * scale), int(top + (y + 0.5) * scale)))
-            out.putpixel((x, y), min(PALETTE, key=lambda p: (p[0] - r) ** 2 + (p[1] - g) ** 2 + (p[2] - b) ** 2))
-    return out
+    xs = (left + (np.arange(320) + 0.5) * scale).astype(int)
+    ys = (top + (np.arange(200) + 0.5) * scale).astype(int)
+    rgb = np.asarray(shot.convert("RGB")).astype(int)[ys][:, xs]
+    pal = np.array(PALETTE)
+    nearest = ((rgb[:, :, None, :] - pal[None, None, :, :]) ** 2).sum(axis=3).argmin(axis=2)
+    return Image.fromarray(pal[nearest].astype(np.uint8))
 
 
 WM_KEYDOWN, WM_KEYUP = 0x0100, 0x0101
@@ -88,6 +89,7 @@ KEYS = {
     "up": (0x26, 0x48, True), "down": (0x28, 0x50, True),
     "left": (0x25, 0x4B, True), "right": (0x27, 0x4D, True),
     "ctrl": (0x11, 0x1D, False), "alt": (0x12, 0x38, False),
+    "c": (0x43, 0x2E, False), "t": (0x54, 0x14, False),
     **{f"f{n}": (0x6F + n, 0x3A + n, False) for n in range(1, 11)},
 }
 
@@ -101,8 +103,18 @@ def press(hwnd: int, key: str, hold: float = 0.15) -> None:
     time.sleep(0.1)
 
 
+def key_event(hwnd: int, key: str, down: bool) -> None:
+    vk, scan, extended = KEYS[key]
+    lparam = 1 | scan << 16 | (1 << 24 if extended else 0)
+    if down:
+        user32.PostMessageW(hwnd, WM_KEYDOWN, vk, lparam)
+    else:
+        user32.PostMessageW(hwnd, WM_KEYUP, vk, lparam | 0xC0000000)
+
+
 def parse_events(args: list[str]) -> list[tuple[float, str | None, int, float]]:
-    """SECONDS, SECONDS=KEY, SECONDS=KEY*COUNT or SECONDS=KEY~HOLD_SECONDS."""
+    """SECONDS, SECONDS=KEY, SECONDS=KEY*COUNT, SECONDS=KEY~HOLD_SECONDS,
+    SECONDS=KEY+ (key down), SECONDS=KEY- (key up), SECONDS=burst~DURATION."""
     events = []
     for arg in args:
         moment, _, key = arg.partition("=")
@@ -110,6 +122,19 @@ def parse_events(args: list[str]) -> list[tuple[float, str | None, int, float]]:
         key, _, count = key.partition("*")
         events.append((float(moment), key or None, int(count or 1), float(hold or 0.15)))
     return events
+
+
+PENDING: list[tuple[float, Image.Image]] = []
+
+
+def burst(hwnd: int, seconds: float, start: float) -> None:
+    """Capture as fast as possible; converted and saved after the run (b<milliseconds>.png)."""
+    end = time.monotonic() + seconds
+    n = 0
+    while time.monotonic() < end:
+        PENDING.append((time.monotonic() - start, capture(hwnd)))
+        n += 1
+    print(f"burst: {n} frames in {seconds}s")
 
 
 def main(events: list[tuple[float, str | None, int, float]]) -> None:
@@ -129,6 +154,12 @@ def main(events: list[tuple[float, str | None, int, float]]) -> None:
             if not windows:
                 print(f"{moment:>5}s: no DOSBox window")
                 continue
+            if key == "burst":
+                burst(windows[0], hold, start)
+                continue
+            if key and key[-1] in "+-" and len(key) > 1:
+                key_event(windows[0], key[:-1], key[-1] == "+")
+                continue
             if key:
                 for _ in range(count):
                     press(windows[0], key, hold)
@@ -140,6 +171,8 @@ def main(events: list[tuple[float, str | None, int, float]]) -> None:
             print(f"{moment:>5}s: {path} (window {shot.size[0]}x{shot.size[1]})")
     finally:
         proc.terminate()
+        for t, shot in PENDING:
+            to_ega(shot).save(OUT / f"b{int(t * 1000):06d}.png")
 
 
 if __name__ == "__main__":
