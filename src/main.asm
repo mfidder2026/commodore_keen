@@ -20,6 +20,9 @@
 #import "game/actors.asm"
 #import "game/game.asm"
 #import "engine/maptile.asm"
+#import "game/text.asm"
+#import "game/map.asm"
+#import "game/flow.asm"
 
 .encoding "petscii_upper"
 
@@ -61,32 +64,14 @@ start:
     jmp player_test
 #elif LEVELTEST
     jmp level_test
+#elif FLOWTEST
+    jmp flow_test
 #elif SCROLLDEMO
     jmp scroll_demo
 #else
     jmp game_main
 #endif
 
-// Until the world map exists (M7): levels in order; dying replays the level,
-// no lives left starts a new game.
-game_main:
-    jsr game_new
-    lda #1
-    sta main_level
-main_next:
-    lda main_level
-    jsr play_level
-    cmp #RESULT_EXIT
-    bne main_died
-    inc main_level
-    lda main_level
-    cmp #17
-    bcc main_next
-    jmp game_main
-main_died:
-    lda lives
-    beq game_main
-    jmp main_next
 
 // M3 demo: scroll through a level with the joystick in port 2; fire loads the next level.
 scroll_demo:
@@ -171,7 +156,9 @@ demo_levels_end:
 #if LEVELTEST
 #import "../tests/scenarios/m5_level.asm"
 #endif
+#if FLOWTEST
+#import "../tests/scenarios/m7_flow.asm"
+#endif
 
 .segment Vars
 demo_level_index: .byte 0
-main_level:       .byte 0

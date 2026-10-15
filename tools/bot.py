@@ -78,6 +78,119 @@ def play(number: int, policy_jump_ahead: int = 20, verbose: bool = False):
     return 0, inputs, m
 
 
+JOY_DOWN, JOY_LEFT, JOY_FIRE = 2, 4, 16
+
+
+class MapWalker:
+    """The world map in py65: walk Keen with the joystick along a tile path."""
+
+    def __init__(self, done_levels=(), keen=None):
+        from collections import deque  # noqa: F401
+        self.m = Machine()
+        self.m.load(tc.BUILD / "assets" / "l80.prg")
+        for routine in ("level_init", "anim_init", "map_collect_spots"):
+            self.m.call(routine)
+        mem, L = self.m.mpu.memory, self.m.labels
+        mem[L["map_mode"]] = 1
+        for n in done_levels:
+            mem[L["levels_done"] + (n - 1) // 8] |= 1 << ((n - 1) % 8)
+        if keen is None:
+            keen = (mem[0x5007] * 256, mem[0x5008] * 256)
+        self.set_keen(*keen)
+        self.inputs: list[int] = []
+        self.prev = 0
+        from tools.convert import original
+        ep = original.load()
+        self.map, self.info = ep.levels[80], ep.tileinfo
+        self.spots = {}
+        for y, row in enumerate(self.map.sprites):
+            for x, code in enumerate(row):
+                if code:
+                    self.spots.setdefault(code, []).append((x, y))
+        self.done = set(done_levels)
+
+    def set_keen(self, x, y):
+        mem = self.m.mpu.memory
+        mem[0x30], mem[0x31], mem[0x32], mem[0x33] = x & 0xFF, x >> 8, y & 0xFF, y >> 8
+
+    def keen(self):
+        mem = self.m.mpu.memory
+        return (mem[0x30] | mem[0x31] << 8) / 16, (mem[0x32] | mem[0x33] << 8) / 16
+
+    def centre_tile(self):
+        x, y = self.keen()
+        return int(x + 6) // 16, int(y + 12) // 16
+
+    def walkable(self, x, y):
+        if not (0 <= x < self.map.width and 0 <= y < self.map.height):
+            return False
+        i = self.info[self.map.tiles[y][x]]
+        if i.top or i.right or i.bottom or i.left:
+            return False
+        code = self.map.sprites[y][x]
+        return not (code & 0x8000 and (code & 0xFF) not in self.done)
+
+    def path(self, goal):
+        from collections import deque
+        start = self.centre_tile()
+        prev, q = {start: None}, deque([start])
+        while q:
+            p = q.popleft()
+            if p == goal:
+                break
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                n = (p[0] + dx, p[1] + dy)
+                if n not in prev and self.walkable(*n):
+                    prev[n] = p
+                    q.append(n)
+        if goal not in prev:
+            raise SystemExit(f"no map path to {goal}")
+        route, p = [], goal
+        while p:
+            route.append(p)
+            p = prev[p]
+        return route[::-1]
+
+    def tick(self, joy):
+        mem = self.m.mpu.memory
+        mem[0x3B], mem[0x3D] = joy, joy & ~self.prev & 0xFF
+        self.prev = joy
+        self.inputs.append(joy)
+        for routine in ("map_move", "camera_follow", "map_spots"):
+            self.m.call(routine)
+
+    def walk_to(self, goal, max_ticks=4000):
+        """Follow the tile path; steer Keen's centre to each tile centre."""
+        for tx, ty in self.path(goal):
+            for _ in range(max_ticks):
+                x, y = self.keen()
+                cx, cy = x, y                      # sprite position
+                tcx, tcy = tx * 16 + 2, ty * 16 - 4    # feet box inside the tile
+                joy = 0
+                if cx < tcx - 2:
+                    joy |= JOY_RIGHT
+                elif cx > tcx + 2:
+                    joy |= JOY_LEFT
+                if cy < tcy - 2:
+                    joy |= JOY_DOWN
+                elif cy > tcy + 2:
+                    joy |= JOY_UP
+                if not joy:
+                    break
+                self.tick(joy)
+            else:
+                raise SystemExit(f"stuck walking to {(tx, ty)} at {self.keen()}")
+
+    def press_fire(self):
+        """Release, then fire. The game stops reading map input in the tick that
+        enters a level, so nothing may follow the fire tick in the script."""
+        self.tick(0)
+        self.tick(JOY_FIRE)
+
+    def result(self):
+        return self.m.mpu.memory[self.m.labels["map_result"]]
+
+
 def to_script(inputs: list[int]) -> list[tuple[int, int]]:
     script = []
     for joy in inputs:

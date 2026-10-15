@@ -224,7 +224,10 @@ tile_attr_at:
     cmp #4
     bcc door_tile
     lda TILE_ATTR, x
+    ldy map_mode                  // on the world map: barriers until their level is done
+    bne !+
     rts
+!:  jmp barrier_attr
 door_tile:
     lda TILE_ATTR, x
     ora #ATTR_TOP_MASK & 1 | BLOCK_RIGHT | BLOCK_BOTTOM | BLOCK_LEFT
@@ -696,7 +699,12 @@ player_draw:
     sta spr_col
     lda spr_col1, x
     sta spr_col + 1
-    lda spr_enable
-    ora #%00000011
-    sta spr_enable
+    lda spr_enable                // sprite 0, and sprite 1 for two-piece frames
+    and #%11111100
+    ora #%00000001
+    ldy spr_pieces, x
+    cpy #2
+    bcc !+
+    ora #%00000010
+!:  sta spr_enable
     rts

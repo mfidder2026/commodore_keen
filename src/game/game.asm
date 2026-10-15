@@ -9,6 +9,8 @@
 // file needs reloading because collected items changed the map in memory).
 play_level:
     sta current_level
+    ldx #0
+    stx map_mode
     jsr load_level
     jsr level_init
     jsr anim_init
@@ -76,7 +78,12 @@ frame_output:
 
 game_tick:
     jsr input_read
-    jsr player_update
+    lda joy_new
+    and #KEY_STOP
+    beq !+
+    jsr status_screen             // RUN/STOP: status and pause
+    jsr text_end
+!:    jsr player_update
     jsr player_touch
     jsr actors_update
     jsr camera_follow             // per tick: actor activation depends on the camera

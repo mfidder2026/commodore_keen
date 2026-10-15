@@ -82,14 +82,15 @@ def level_file(lvl: c64.C64Level) -> bytes:
 
 
 def font_bytes(header: ega.EgaHeader, latch: bytes) -> bytes:
-    """64 hires characters (ASCII 32-95) from Keen's 8x8 font: any non-black pixel is set."""
+    """64 hires characters (ASCII 32-95) from Keen's 8x8 font. The font has black letters
+    on a light background, so black pixels become set bits."""
     glyphs = ega.font(header, latch)
     out = bytearray()
     for code in range(32, 96):
         for row in glyphs[code]:
             byte = 0
             for x, c in enumerate(row):
-                if c not in (0,):
+                if c == 0:
                     byte |= 0x80 >> x
             out.append(byte)
     return bytes(out)
@@ -196,9 +197,9 @@ def main() -> None:
 
     report["sprites"] = {"pieces": sum(len(s.pieces) for s in spr), "shared": shared}
     (ASSETS / "report.json").write_text(json.dumps(report, indent=2))
-    for n, r in report.items():
-        print(n, r)
+    return report
 
 
 if __name__ == "__main__":
-    main()
+    for number, info in main().items():
+        print(number, info)
