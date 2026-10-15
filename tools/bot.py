@@ -36,7 +36,7 @@ class Level:
 def play(number: int, policy_jump_ahead: int = 20, verbose: bool = False):
     m = Machine()
     m.load(tc.BUILD / "assets" / f"l{number:02d}.prg")
-    for routine in ("level_init", "anim_init", "game_new", "items_level_start", "player_init",
+    for routine in ("level_init", "anim_init", "game_new", "items_level_start", "actors_init", "player_init",
                     "camera_center", "scroll_init"):
         m.call(routine)
     lvl = Level(number)
@@ -67,6 +67,8 @@ def play(number: int, policy_jump_ahead: int = 20, verbose: bool = False):
         inputs.append(joy)
         m.call("player_update")
         m.call("player_touch")
+        m.call("actors_update")
+        m.call("camera_follow")
         if (mem[0x33] >> 4) >= lvl.level.height:      # fell out of the map
             mem[result_addr] = RESULT_DIED
         if mem[result_addr]:

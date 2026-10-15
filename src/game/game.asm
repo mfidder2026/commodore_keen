@@ -15,15 +15,20 @@ play_level:
     lda #0
     sta spr_enable
     jsr items_level_start
+    jsr actors_init
     jsr player_init
     jsr camera_center
     jsr scroll_init
     jsr wait_frame
     lda #0
     sta play_result
+    sta perf_max_frames
+    sta perf_lost
+    sta perf_lost + 1
 
 play_loop:
     jsr wait_frame                // A = frames since the last iteration
+    jsr perf_count
     cmp #MAX_TICKS_PER_FRAME + 1
     bcc !+
     lda #MAX_TICKS_PER_FRAME
@@ -44,11 +49,28 @@ play_done:
     lda play_result
     rts
 
+// Frame statistics (read by tests): longest iteration in frames, frames lost in total.
+// In: A = frames since the last iteration. Keeps A.
+perf_count:
+    pha
+    cmp perf_max_frames
+    bcc !+
+    sta perf_max_frames
+!:  sec
+    sbc #1
+    clc
+    adc perf_lost
+    sta perf_lost
+    bcc !+
+    inc perf_lost + 1
+!:  pla
+    rts
+
 // Per displayed frame: camera, scrolling, sprites, tile animation, background render.
 frame_output:
-    jsr camera_follow
     jsr scroll_update
     jsr player_draw
+    jsr actors_draw
     jsr anim_update
     jmp render_step
 
@@ -56,6 +78,8 @@ game_tick:
     jsr input_read
     jsr player_update
     jsr player_touch
+    jsr actors_update
+    jsr camera_follow             // per tick: actor activation depends on the camera
     jsr check_fell_out
 #if INPUTSCRIPT
     jsr record_tick
@@ -67,8 +91,10 @@ check_fell_out:
     lda p_y + 1                   // p_y / 256 = tile row of the sprite top
     cmp level_height
     bcc !+
+#if !GODMODE
     lda #RESULT_DIED
     sta play_result
+#endif
 !:  rts
 
 // Keen's death: the death sprite flies up off the screen (like the original), then
@@ -141,3 +167,5 @@ camera_center:
 current_level: .byte 0
 play_result:   .byte 0
 ticks_due:     .byte 0
+perf_max_frames: .byte 0
+perf_lost:     .word 0

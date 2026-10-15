@@ -38,3 +38,15 @@
 .label new_x         = $4b         // 2 bytes
 .label new_y         = $4d         // 2 bytes
 .label p_has_pogo    = $4f
+
+// Current actor work area (game/actors.asm).
+.label o_x           = $50         // 2 bytes, 1/16 px
+.label o_y           = $52         // 2 bytes
+.label o_vx          = $54
+.label o_vy          = $55
+.label o_ground      = $56
+.label o_box_l       = $57
+.label o_box_r       = $58
+.label o_box_t       = $59
+.label o_box_b       = $5a
+.label p_frozen      = $5b         // ticks Keen stays frozen (ice)

@@ -128,8 +128,7 @@ kernal_save:
     sty load_name + 1
     sei
     lda #0
-    sta $d01a
-    sta $d015
+    sta $d01a                     // sprites stay on: the last frame remains visible
     lda #$ff
     sta $d019
     lda #$36

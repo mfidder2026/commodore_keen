@@ -35,8 +35,16 @@ player_init:
 
 // One game tick.
 player_update:
-    jsr player_controls
-    jsr player_move_x
+    lda p_frozen
+    beq !+
+    dec p_frozen                  // frozen by ice: no control, slide to a stop
+    lda #0
+    sta p_vx
+    jsr gravity
+    jmp !++
+!:  jsr player_controls
+    jsr player_fire
+!:  jsr player_move_x
     jsr player_move_y
     jsr player_animate
     rts
@@ -470,7 +478,29 @@ pixels_to_new_y:
 
 // Choose Keen's sprite: pogo, jump frames by vertical speed, walk cycle, standing.
 player_animate:
-    lda p_pogo
+    lda p_frozen
+    beq !+
+    and #16                       // KEENSICLE1/2 while frozen
+    lsr
+    lsr
+    lsr
+    lsr
+    clc
+    adc #SPR_KEENSICLE1
+    sta p_sprite
+    rts
+!:  lda shoot_pose
+    beq !+
+    lda p_ground
+    beq !+
+    lda #SPR_KEENSHOOTR
+    ldx p_facing
+    beq shoot_frame
+    lda #SPR_KEENSHOOTL
+shoot_frame:
+    sta p_sprite
+    rts
+!:  lda p_pogo
     beq not_pogo
     lda p_ground
     eor #1                        // POGOR1 (compressed) on the ground, POGOR2 in the air

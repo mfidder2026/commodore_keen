@@ -3,6 +3,7 @@
 
 #import "memory.asm"
 #import "zp.asm"
+#import "macros.asm"
 .segment Code
 #import "gen_sprites.asm"        // generated tables: build/generated (tools/convert/export.py)
 #import "engine/system.asm"
@@ -16,6 +17,7 @@
 #import "game/input.asm"
 #import "game/player.asm"
 #import "game/items.asm"
+#import "game/actors.asm"
 #import "game/game.asm"
 #import "engine/maptile.asm"
 

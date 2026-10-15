@@ -1,6 +1,8 @@
-// M5 scenario: play a level from start to exit with the input found by tools/bot.py
-// (build/generated/gen_script.asm). Saves the outcome as STATS and exits VICE with
-// code 0 when the exit was reached, 1 otherwise.
+// Level scenario (M5, M6): play a level with a scripted joystick
+// (build/generated/gen_script.asm: SCRIPT_LEVEL and input_script).
+// When the script runs out, the level is ended with RESULT_QUIT.
+// Saves the outcome as STATS and exits VICE with code 0 (exit reached or script done)
+// or 1 (Keen died).
 
 #import "gen_script.asm"
 
@@ -11,6 +13,7 @@ level_test:
     lda #0
     sta script_pos
     sta script_left
+    sta script_done
     lda #SCRIPT_LEVEL
     jsr play_level
     sta lt_stats                  // play_result
@@ -27,6 +30,12 @@ level_test:
     sta lt_stats + 6
     lda keycards
     sta lt_stats + 7
+    lda perf_max_frames
+    sta lt_stats + 8
+    lda perf_lost
+    sta lt_stats + 9
+    lda perf_lost + 1
+    sta lt_stats + 10
     lda #<lt_stats
     sta save_from
     lda #>lt_stats
@@ -40,8 +49,8 @@ level_test:
     ldy #>lt_name
     jsr kernal_save
     lda lt_stats
-    cmp #RESULT_EXIT
-    beq !+
+    cmp #RESULT_DIED
+    bne !+
     lda #1
     sta $d7ff
 !:  lda #0
@@ -71,6 +80,8 @@ script_input:
 script_end:
     lda #0
     sta joy
+    lda #RESULT_QUIT              // checked by play_loop after this tick
+    sta play_result
     rts
 
 record_tick:
@@ -80,5 +91,8 @@ record_tick:
 script_pos:  .byte 0
 script_left: .byte 0
 script_joy:  .byte 0
-lt_stats:    .fill 8, 0           // result, score (3, BCD), lives, ammo, ship parts, keycards
+script_done: .byte 0
+// result, score (3, BCD), lives, ammo, ship parts, keycards, max frames per
+// iteration, lost frames (2)
+lt_stats:    .fill 11, 0
 lt_stats_end:

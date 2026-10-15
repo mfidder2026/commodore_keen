@@ -21,7 +21,7 @@ def episode():
 def start(number):
     m = Machine()
     m.load(tc.BUILD / "assets" / f"l{number:02d}.prg")
-    for routine in ("level_init", "anim_init", "game_new", "items_level_start", "player_init",
+    for routine in ("level_init", "anim_init", "game_new", "items_level_start", "actors_init", "player_init",
                     "camera_center", "scroll_init"):
         m.call(routine)
     m.mpu.memory[m.labels["play_result"]] = 0

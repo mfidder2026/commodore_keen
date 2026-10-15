@@ -79,8 +79,10 @@ touch_done:
 touch_behaviour:
     cmp #BEH_KILLS
     bne !+
+#if !GODMODE
     lda #RESULT_DIED
     sta play_result
+#endif
     rts
 !:  cmp #BEH_EXIT
     bne !+
