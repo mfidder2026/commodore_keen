@@ -280,6 +280,22 @@ actor_load:
     sta o_box_t
     lda box_bottom_tab, y
     sta o_box_b
+    lda box_l16_lo, y
+    sta o_bl16
+    lda box_l16_hi, y
+    sta o_bl16 + 1
+    lda box_r16_lo, y
+    sta o_br16
+    lda box_r16_hi, y
+    sta o_br16 + 1
+    lda box_t16_lo, y
+    sta o_bt16
+    lda box_t16_hi, y
+    sta o_bt16 + 1
+    lda box_b16_lo, y
+    sta o_bb16
+    lda box_b16_hi, y
+    sta o_bb16 + 1
     rts
 
 actor_store:
@@ -301,15 +317,57 @@ actor_store:
     rts
 
 // Collision boxes per type (pixels inside the sprite), from EGAHEAD hitboxes.
-//                   none yorp garg vort butl tank ice  -   -   -  cmdr shot tshot ice splash
-box_left_tab:   .byte 0,   4,   4,   2,   3,   0,  0,  0,  0,  0,  2,   2,   2,   2,   0
-box_right_tab:  .byte 0,  11,  19,  21,  12,  15,  0,  0,  0,  0, 21,  13,  13,  13,  0
-box_top_tab:    .byte 0,   4,   4,   1,   3,   0,  0,  0,  0,  0,  1,   2,   2,   2,   0
-box_bottom_tab: .byte 0,  23,  31,  31,  15,  23,  0,  0,  0,  0, 31,   5,   5,   13,  0
+//                         none yorp garg vort butl tank ice  -  -  -  cmdr shot tshot ice splash
+.var box_l = List().add(0,   4,   4,   2,   3,   0,  0,  0, 0, 0,  2,   2,   2,   2,   0)
+.var box_r = List().add(0,  11,  19,  21,  12,  15,  0,  0, 0, 0, 21,  13,  13,  13,   0)
+.var box_t = List().add(0,   4,   4,   1,   3,   0,  0,  0, 0, 0,  1,   2,   2,   2,   0)
+.var box_b = List().add(0,  23,  31,  31,  15,  23,  0,  0, 0, 0, 31,   5,   5,  13,   0)
+box_left_tab:   .fill box_l.size(), box_l.get(i)
+box_right_tab:  .fill box_r.size(), box_r.get(i)
+box_top_tab:    .fill box_t.size(), box_t.get(i)
+box_bottom_tab: .fill box_b.size(), box_b.get(i)
+// the same in 1/16 px; the bottom one pixel lower (the pixel below the feet)
+box_l16_lo:     .fill box_l.size(), <(box_l.get(i) * 16)
+box_l16_hi:     .fill box_l.size(), >(box_l.get(i) * 16)
+box_r16_lo:     .fill box_r.size(), <(box_r.get(i) * 16)
+box_r16_hi:     .fill box_r.size(), >(box_r.get(i) * 16)
+box_t16_lo:     .fill box_t.size(), <(box_t.get(i) * 16)
+box_t16_hi:     .fill box_t.size(), >(box_t.get(i) * 16)
+box_b16_lo:     .fill box_b.size(), <((box_b.get(i) + 1) * 16)
+box_b16_hi:     .fill box_b.size(), >((box_b.get(i) + 1) * 16)
+
+// o_bl16 .. o_bb16 from o_box_* (for callers that set the box themselves, the map).
+box16_from_box:
+    ldx #3
+!:  lda o_box_l, x
+    sta zp_tmp0
+    lda #0
+    .for (var i = 0; i < 4; i++) {
+        asl zp_tmp0
+        rol
+    }
+    sta zp_tmp1
+    txa
+    asl
+    tay
+    lda zp_tmp0
+    sta o_bl16, y
+    lda zp_tmp1
+    sta o_bl16 + 1, y
+    dex
+    bpl !-
+    clc                           // bottom: one pixel lower
+    lda o_bb16
+    adc #16
+    sta o_bb16
+    bcc !+
+    inc o_bb16 + 1
+!:  rts
 
 // ---------------------------------------------------------------------------------
 // Movement with tile collision for the current actor (o_*).
 // actor_walk: horizontal move by o_vx; C set if a wall or the map edge stopped it.
+// Tile numbers are the high bytes of positions in 1/16 px.
 actor_walk:
     lda o_vx
     bne !+
@@ -328,23 +386,40 @@ actor_walk:
     bpl !+
     sec                           // left edge of the world
     rts
-!:  PixelsOf(new_x, box_left)
-    PixelsOf(o_y, box_top)
-    lda o_box_t
-    jsr tile_of_top
+!:  clc                           // rows of the box
+    lda o_y
+    adc o_bt16
+    lda o_y + 1
+    adc o_bt16 + 1
     sta t_row
-    lda o_box_b
-    jsr tile_of_top
+    sec                           // bottom row: (y - 16 + (bottom + 1) * 16) >> 8
+    lda o_y
+    sbc #16
+    tax
+    lda o_y + 1
+    sbc #0
+    tay
+    clc
+    txa
+    adc o_bb16
+    tya
+    adc o_bb16 + 1
     sta t_end
     lda o_vx
     bmi !+
-    lda o_box_r
-    jsr tile_of_left
+    clc                           // moving right: column of the right edge
+    lda new_x
+    adc o_br16
+    lda new_x + 1
+    adc o_br16 + 1
     sta t_col
     lda #BLOCK_LEFT
     jmp walk_check
-!:  lda o_box_l
-    jsr tile_of_left
+!:  clc                           // moving left: column of the left edge
+    lda new_x
+    adc o_bl16
+    lda new_x + 1
+    adc o_bl16 + 1
     sta t_col
     lda #BLOCK_RIGHT
 walk_check:
@@ -409,46 +484,52 @@ actor_fall:
     lda #0
     sta o_ground
     lda o_vy
-    jmi fall_store                // rising: no ceiling check for actors
-    PixelsOf(o_x, box_left)
-    lda o_box_l
-    jsr tile_of_left
-    sta t_col
-    lda o_box_r
-    jsr tile_of_left
-    sta t_end
-    PixelsOf(new_y, box_top)
-    lda o_box_b
+    bmi fall_store                // rising: no ceiling check for actors
+    // probe row: the pixel below the new feet; old feet row: the pixel of the old feet
     clc
-    adc #1
-    jsr tile_of_top
+    lda new_y
+    adc o_bb16
+    lda new_y + 1
+    adc o_bb16 + 1
     sta t_row
-    PixelsOf(o_y, box_top)
-    lda o_box_b
-    jsr tile_of_top
+    sec
+    lda o_y
+    sbc #16                       // old feet pixel = probe position of the old y - 1 px
+    tax
+    lda o_y + 1
+    sbc #0
+    tay
+    clc
+    txa
+    adc o_bb16
+    tya
+    adc o_bb16 + 1
     cmp t_row
-    bcs fall_store
+    bcs fall_store                // the feet were already in that row
+    clc                           // columns of the box
+    lda o_x
+    adc o_bl16
+    lda o_x + 1
+    adc o_bl16 + 1
+    sta t_col
+    clc
+    lda o_x
+    adc o_br16
+    lda o_x + 1
+    adc o_br16 + 1
+    sta t_end
     lda #ATTR_TOP_MASK
     sta c_tmp + 2
     jsr row_blocked
     beq fall_store
-    // land: sprite top = row * 16 - box_bottom - 1
+    // land: y = row * 256 - (bottom + 1) * 16, so the feet end just above the row
+    sec
+    lda #0
+    sbc o_bb16
+    sta new_y
     lda t_row
-    jsr times16
-    sec
-    lda c_tmp
-    sbc o_box_b
-    sta box_top
-    lda c_tmp + 1
-    sbc #0
-    sta box_top + 1
-    sec
-    lda box_top
-    sbc #1
-    sta box_top
-    bcs !+
-    dec box_top + 1
-!:  jsr pixels_to_new_y
+    sbc o_bb16 + 1
+    sta new_y + 1
     lda #0
     sta o_vy
     lda #1

@@ -50,3 +50,7 @@
 .label o_box_t       = $59
 .label o_box_b       = $5a
 .label p_frozen      = $5b         // ticks Keen stays frozen (ice)
+.label o_bl16        = $5c         // box offsets in 1/16 px (2 bytes each, this order:
+.label o_br16        = $5e         // left, right, top, bottom + 1 px)
+.label o_bt16        = $60
+.label o_bb16        = $62

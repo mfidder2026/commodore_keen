@@ -27,6 +27,10 @@ play_level:
     sta perf_max_frames
     sta perf_lost
     sta perf_lost + 1
+    sta perf_tick_max
+    sta perf_tick_max + 1
+    sta perf_out_max
+    sta perf_out_max + 1
 
 play_loop:
     jsr wait_frame                // A = frames since the last iteration
@@ -35,7 +39,15 @@ play_loop:
     bcc !+
     lda #MAX_TICKS_PER_FRAME
 !:  sta ticks_due
-!:  jsr game_tick
+!:
+#if INPUTSCRIPT
+    TimerRead(perf_t0)
+#endif
+    jsr game_tick
+#if INPUTSCRIPT
+    TimerRead(perf_t1)
+    TimerMax(perf_t0, perf_t1, perf_tick_max)
+#endif
     lda play_result
     bne play_done
     dec ticks_due
@@ -70,10 +82,17 @@ perf_count:
 
 // Per displayed frame: camera, scrolling, sprites, tile animation, background render.
 frame_output:
+#if INPUTSCRIPT
+    TimerRead(perf_t0)
+#endif
     jsr scroll_update
     jsr player_draw
     jsr actors_draw
     jsr anim_update
+#if INPUTSCRIPT
+    TimerRead(perf_t1)
+    TimerMax(perf_t0, perf_t1, perf_out_max)
+#endif
     jmp render_step
 
 game_tick:
@@ -176,3 +195,7 @@ play_result:   .byte 0
 ticks_due:     .byte 0
 perf_max_frames: .byte 0
 perf_lost:     .word 0
+perf_tick_max: .word 0              // test builds: longest game tick in cycles
+perf_out_max:  .word 0              // test builds: longest frame output without rendering
+perf_t0:       .word 0
+perf_t1:       .word 0

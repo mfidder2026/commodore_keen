@@ -9,6 +9,7 @@
 .segment Code
 
 level_test:
+    jsr timer_init
     jsr game_new
     lda #0
     sta script_pos
@@ -36,6 +37,14 @@ level_test:
     sta lt_stats + 9
     lda perf_lost + 1
     sta lt_stats + 10
+    lda perf_tick_max
+    sta lt_stats + 11
+    lda perf_tick_max + 1
+    sta lt_stats + 12
+    lda perf_out_max
+    sta lt_stats + 13
+    lda perf_out_max + 1
+    sta lt_stats + 14
     lda #<lt_stats
     sta save_from
     lda #>lt_stats
@@ -94,5 +103,5 @@ script_joy:  .byte 0
 script_done: .byte 0
 // result, score (3, BCD), lives, ammo, ship parts, keycards, max frames per
 // iteration, lost frames (2)
-lt_stats:    .fill 11, 0
+lt_stats:    .fill 15, 0
 lt_stats_end:

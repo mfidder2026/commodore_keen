@@ -232,6 +232,7 @@ map_move:
     sta o_box_t
     lda #MAP_BOX_BOTTOM
     sta o_box_b
+    jsr box16_from_box
     lda #0
     sta o_vx
     sta o_vy
