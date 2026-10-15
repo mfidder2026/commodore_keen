@@ -32,3 +32,8 @@
 .const CAM_BOTTOM_EDGE  = 112
 
 .const WALK_FRAME_TICKS = 6
+
+// Results of play_level (game/game.asm).
+.const RESULT_DIED     = 1
+.const RESULT_EXIT     = 2
+.const RESULT_QUIT     = 3

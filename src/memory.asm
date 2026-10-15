@@ -21,6 +21,7 @@
 .const LVL_START_Y    = LEVEL_BASE + 8
 .const LVL_ANIM_COUNT = LEVEL_BASE + 9
 .const LVL_ACTOR_COUNT = LEVEL_BASE + 10
+.const LVL_BG_TILE    = LEVEL_BASE + 12   // empty tile that replaces collected items
 .const LVL_ANIMS      = LEVEL_BASE + $040 // 4 bytes each: first char, frames, data lo, hi
 .const LVL_CHAR_COLOUR = LEVEL_BASE + $100
 .const LVL_CHARSET    = LEVEL_BASE + $200

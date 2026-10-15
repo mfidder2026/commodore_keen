@@ -1,21 +1,20 @@
-// Playing one level: load, set up, run the frame loop.
+// Playing one level: load, set up, run the frame loop, death and exit.
 
 .const MAX_TICKS_PER_FRAME = 2    // catch up at most this many lost frames
-.const RESULT_DIED     = 1
-.const RESULT_EXIT     = 2
-.const RESULT_QUIT     = 3
+.const DEATH_TICKS     = 75       // 1.5 s death animation
 
 .segment Code
 
-// A = level number. Loads and starts it; returns when the level ends (play_result).
+// A = level number. Returns with play_result: RESULT_EXIT or RESULT_DIED (map/level
+// file needs reloading because collected items changed the map in memory).
 play_level:
     sta current_level
     jsr load_level
     jsr level_init
     jsr anim_init
-level_restart:
     lda #0
     sta spr_enable
+    jsr items_level_start
     jsr player_init
     jsr camera_center
     jsr scroll_init
@@ -34,23 +33,29 @@ play_loop:
     bne play_done
     dec ticks_due
     bne !-
+    jsr frame_output
+    jmp play_loop
+play_done:
+    cmp #RESULT_DIED
+    bne !+
+    jsr death_sequence
+!:  lda #0
+    sta spr_enable
+    lda play_result
+    rts
+
+// Per displayed frame: camera, scrolling, sprites, tile animation, background render.
+frame_output:
     jsr camera_follow
     jsr scroll_update
     jsr player_draw
     jsr anim_update
-    jsr render_step
-    jmp play_loop
-play_done:
-    lda play_result
-    cmp #RESULT_DIED
-    bne !+
-    jmp level_restart             // M5 adds lives; for now: try again
-!:  rts
-
+    jmp render_step
 
 game_tick:
     jsr input_read
     jsr player_update
+    jsr player_touch
     jsr check_fell_out
 #if INPUTSCRIPT
     jsr record_tick
@@ -65,6 +70,34 @@ check_fell_out:
     lda #RESULT_DIED
     sta play_result
 !:  rts
+
+// Keen's death: the death sprite flies up off the screen (like the original), then
+// one life is lost.
+death_sequence:
+    lda #DEATH_TICKS
+    sta ticks_due
+!:  jsr wait_frame
+    lda ticks_due
+    and #8
+    lsr
+    lsr
+    lsr                           // alternate KEENISDEAD1/2 every 8 ticks
+    clc
+    adc #SPR_KEENISDEAD1
+    sta p_sprite
+    sec                           // move up 2 px per tick
+    lda p_y
+    sbc #32
+    sta p_y
+    bcs !+
+    dec p_y + 1
+!:  jsr scroll_update
+    jsr player_draw
+    jsr anim_update
+    dec ticks_due
+    bne !--
+    dec lives
+    rts
 
 // Camera centred on Keen (start of a level).
 camera_center:

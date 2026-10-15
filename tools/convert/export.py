@@ -27,6 +27,15 @@ SOUND_RATE_HZ = 140          # Keen 1 updates the PC speaker at about 140 Hz (ra
 FRAME_HZ = 50
 
 
+def background_tile(lvl: c64.C64Level) -> int:
+    """The most common tile without behaviour and without blocking: what a collected item
+    or an opened door is replaced by when no empty neighbour is found."""
+    from collections import Counter
+    counts = Counter(t for row in lvl.map for t in row
+                     if lvl.tile_behaviour[t] == 0 and lvl.tile_attr[t] & 0x1F == 0)
+    return counts.most_common(1)[0][0] if counts else 0
+
+
 def level_file(lvl: c64.C64Level) -> bytes:
     if len(lvl.anims) > MAX_ANIMS:
         raise ValueError(f"level {lvl.number}: {len(lvl.anims)} animation groups > {MAX_ANIMS}")
@@ -35,8 +44,9 @@ def level_file(lvl: c64.C64Level) -> bytes:
         raise ValueError(f"level {lvl.number}: map too large")
 
     out = bytearray(OFF_MAP + lvl.width * lvl.height)
-    struct.pack_into("<cBBBBBBBBBBB", out, OFF_HEADER, b"K", lvl.number, lvl.width, lvl.height,
-                     *lvl.shared, *lvl.start, len(lvl.anims), len(actors), len(lvl.tiles) & 0xFF)
+    struct.pack_into("<cBBBBBBBBBBBB", out, OFF_HEADER, b"K", lvl.number, lvl.width, lvl.height,
+                     *lvl.shared, *lvl.start, len(lvl.anims), len(actors), len(lvl.tiles) & 0xFF,
+                     background_tile(lvl))
 
     frame_pos = 0
     for i, g in enumerate(lvl.anims):

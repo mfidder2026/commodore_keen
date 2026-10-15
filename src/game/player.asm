@@ -209,14 +209,24 @@ tile_attr_at:
     ldy t_col
     lda (c_tmp), y
     tax
+    // Closed doors (behaviour 2-5) block on all sides; tileinfo only marks top/bottom.
+    lda TILE_BEHAVIOUR, x
+    sec
+    sbc #2
+    cmp #4
+    bcc door_tile
     lda TILE_ATTR, x
     rts
+door_tile:
+    lda TILE_ATTR, x
+    ora #ATTR_TOP_MASK & 1 | BLOCK_RIGHT | BLOCK_BOTTOM | BLOCK_LEFT
+    rts
 tile_empty:
-    ldx #0
+    ldx LVL_BG_TILE               // a tile without behaviour
     lda #0
     rts
 tile_solid:
-    ldx #0
+    ldx LVL_BG_TILE
     lda #ATTR_TOP_MASK | BLOCK_RIGHT | BLOCK_BOTTOM | BLOCK_LEFT
     rts
 
@@ -288,6 +298,8 @@ player_move_x:
     sta c_tmp + 2
     jsr column_blocked
     beq store_x
+    jsr door_blocked              // a door Keen has the keycard for opens
+    bcs store_x
     // stop at the tile's left side: left = col * 16 - KEEN_BOX_RIGHT - 1
     lda t_col
     jsr times16
@@ -305,6 +317,8 @@ move_left:
     sta c_tmp + 2
     jsr column_blocked
     beq store_x
+    jsr door_blocked
+    bcs store_x
     // stop at the tile's right side: left = (col + 1) * 16 - KEEN_BOX_LEFT
     ldx t_col
     inx
