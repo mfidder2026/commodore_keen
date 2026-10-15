@@ -861,6 +861,8 @@ tank_update:
     jmp walker
 
 tank_fire:
+    lda #SND_TANKFIRE
+    jsr sound_play
     jsr free_slot
     bcc !+
     lda #T_TANKSHOT
@@ -1049,7 +1051,16 @@ shot_target:
     cmp #T_COMMANDER
     beq vort_hit
 kill_it:
-    lda #S_DEAD
+    lda act_type, y
+    cmp #T_YORP
+    bne !+
+    lda #SND_YORPSCREAM
+    jsr sound_play
+    jmp !++
+!:
+    lda #SND_GARGSCREAM
+    jsr sound_play
+!:  lda #S_DEAD
     sta act_state, y
     lda #0
     sta act_timer, y
@@ -1060,6 +1071,8 @@ kill_it:
     lda #SPR_GARGCORPSE1
 !:  sta act_sprite, y
 absorbed:
+    lda #SND_SHOTHIT
+    jsr sound_play
     jmp make_splash
 vort_hit:
     lda act_hp, y
@@ -1168,10 +1181,16 @@ player_fire:
     lda #10
     sta shoot_pose
     lda ammo
-    beq fire_done                 // empty: click (sound in M8)
+    bne !+
+    lda #SND_GUNCLICK
+    jsr sound_play
+    jmp fire_done
+!:
     jsr free_slot
     bcc fire_done
     dec ammo
+    lda #SND_KEENFIRESND
+    jsr sound_play
     lda #8
     sta shot_cooldown
     lda #T_KEENSHOT
@@ -1265,6 +1284,9 @@ touch_yorp:
     sta act_state, x
     lda #STUN_TICKS
     sta act_timer, x
+    lda #SND_YORPBOPSND
+    jsr sound_play
+
     lda #(-48) & $ff              // Keen bounces off
     sta p_vy
     rts
@@ -1281,6 +1303,8 @@ touch_push:
 !:  sta p_vx
     rts
 touch_ice:
+    lda #SND_KEENCICLE
+    jsr sound_play
     lda #FREEZE_TICKS
     sta p_frozen
     lda #T_NONE

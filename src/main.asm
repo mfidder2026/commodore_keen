@@ -6,6 +6,7 @@
 #import "macros.asm"
 .segment Code
 #import "gen_sprites.asm"        // generated tables: build/generated (tools/convert/export.py)
+#import "gen_sounds.asm"
 #import "engine/system.asm"
 #import "engine/exodecrunch.asm"
 #import "engine/irq.asm"
@@ -13,6 +14,7 @@
 #import "engine/scroll.asm"
 #import "engine/sprites.asm"
 #import "engine/timing.asm"
+#import "engine/sound.asm"
 #import "game/physics.asm"
 #import "game/input.asm"
 #import "game/player.asm"
@@ -57,7 +59,13 @@ start:
     sta irq_hook_vector + 1
     jsr system_init
     jsr sprites_init
+    jsr sound_init
     jsr load_sprite_bank
+    jsr load_sounds
+    lda #<sound_tick
+    sta irq_hook_vector
+    lda #>sound_tick
+    sta irq_hook_vector + 1
 #if SCROLLTEST
     jmp scroll_test
 #elif PLAYERTEST

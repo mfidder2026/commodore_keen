@@ -55,7 +55,12 @@ play_loop:
     jsr frame_output
     jmp play_loop
 play_done:
-    cmp #RESULT_DIED
+    cmp #RESULT_EXIT
+    bne !+
+    lda #SND_LVLDONESND
+    jsr sound_play
+    lda #RESULT_EXIT
+!:  cmp #RESULT_DIED
     bne !+
     jsr death_sequence
 !:  lda #0
@@ -126,6 +131,8 @@ check_fell_out:
 // Keen's death: the death sprite flies up off the screen (like the original), then
 // one life is lost.
 death_sequence:
+    lda #SND_KEENDIESND
+    jsr sound_play
     lda #DEATH_TICKS
     sta ticks_due
 !:  jsr wait_frame

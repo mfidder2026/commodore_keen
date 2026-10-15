@@ -17,7 +17,8 @@ GENERATED = tc.BUILD / "generated"
 ASSETS = tc.BUILD / "assets"
 # Disk file name -> asset file. Levels are loaded by the game by these names.
 LEVEL_NUMBERS = list(range(1, 17)) + [80, 81, 90]
-DISK_FILES = {"sprites": "sprites.prg", **{f"l{n:02d}": f"l{n:02d}.prg" for n in LEVEL_NUMBERS}}
+DISK_FILES = {"sprites": "sprites.prg", "sounds": "sounds.prg",
+              **{f"l{n:02d}": f"l{n:02d}.prg" for n in LEVEL_NUMBERS}}
 
 
 CRUNCHED = ASSETS / "crunched"

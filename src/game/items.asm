@@ -99,6 +99,8 @@ touch_behaviour:
     lda points_mid, x
     ldy points_low, x
     jsr add_score
+    lda #SND_GOTBONUSSND
+    jsr sound_play
     jmp collect
 !:  cmp #BEH_EVERCLEAR + 1
     bcs !+
@@ -108,6 +110,8 @@ touch_behaviour:
     lda bit_table, x
     ora ship_parts
     sta ship_parts
+    lda #SND_GOTPARTSND
+    jsr sound_play
     jmp collect
 !:  cmp #BEH_RAYGUN
     bne !+
@@ -115,11 +119,15 @@ touch_behaviour:
     clc
     adc #RAYGUN_SHOTS
     sta ammo
+    lda #SND_GOTITEMSND
+    jsr sound_play
     jmp collect
 !:  cmp #BEH_POGO
     bne !+
     lda #1
     sta p_has_pogo
+    lda #SND_GOTITEMSND
+    jsr sound_play
     jmp collect
 !:  cmp #BEH_KEY1
     bcc touch_ignore
@@ -131,6 +139,8 @@ touch_behaviour:
     lda bit_table, x
     ora keycards
     sta keycards
+    lda #SND_GETCARDSND
+    jsr sound_play
     jmp collect
 touch_ignore:
     rts
@@ -207,6 +217,8 @@ add_score:
     cmp next_life
     bcc !+
     inc lives
+    lda #SND_EXTRAMANSND
+    jsr sound_play
     sed
     clc
     lda next_life
@@ -245,6 +257,8 @@ door_next:
 
 // Remove the whole door in column t_col around row t_row (all tiles with door behaviour).
 open_door:
+    lda #SND_DOOROPENSND
+    jsr sound_play
     ldx t_row
     stx door_scan
     // find the top of the door

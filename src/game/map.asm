@@ -396,6 +396,8 @@ on_spot:
     bcs spot_done
     jsr level_is_done             // done levels cannot be entered again
     bcs spot_done
+    lda #SND_WLDENTERSND
+    jsr sound_play
     lda #MAP_RESULT_LEVEL
     sta map_result
 spot_done:
@@ -429,6 +431,8 @@ teleport:
     sta p_y
     lda #1
     sta teleport_lock
+    lda #SND_TELEPORTSND
+    jsr sound_play
     rts
 
 // MARK sprites on the entrances of done levels that are on screen (sprites 2-7).

@@ -6,7 +6,7 @@
 // stand 30 ticks. The jump happens near x = 258, where the measurement in the original
 // was taken (open above, a platform with its top at y = 240 to land on).
 
-.const RECORD = $b000              // 4 bytes per tick: x lo/hi, y lo/hi (1/16 px)
+.const RECORD = $a900              // 4 bytes per tick: x lo/hi, y lo/hi (1/16 px)
 .const RECORD_TICKS = 280
 
 .segment Code

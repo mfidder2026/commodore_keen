@@ -240,6 +240,8 @@ part_loop:
     jmp wait_fire
 
 game_over:
+    lda #SND_GAMEOVERSND
+    jsr sound_play
     jsr text_begin
     lda #2
     sta text_colour

@@ -149,6 +149,14 @@ launch:
     sta p_vy
     lda #0
     sta p_ground
+    lda p_pogo
+    beq !+
+    lda #SND_POGOJUMPSND
+    jsr sound_play
+    rts
+!:
+    lda #SND_KEENJUMPSND
+    jsr sound_play
     rts
 gravity:
     lda p_vy
@@ -395,7 +403,14 @@ player_move_y:
     sbc #0
     sta box_top + 1
     jsr pixels_to_new_y
-    lda #0
+    lda p_vy                      // landing after a real fall: sound
+    cmp #24
+    bcc !+
+    lda p_pogo
+    bne !+
+    lda #SND_KEENLANDSND
+    jsr sound_play
+!:  lda #0
     sta p_vy
     lda #1
     sta p_ground
@@ -433,6 +448,8 @@ move_up:
     jsr pixels_to_new_y
     lda #0
     sta p_vy
+    lda #SND_BUMPHEADSND
+    jsr sound_play
 store_y:
     lda new_y
     sta p_y
