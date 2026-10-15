@@ -1,18 +1,26 @@
 # Memory map
 
-Source of truth: `src/memory.asm` (segments) and `src/zp.asm` (zero page). The target layout is in PLAN.md under "Geheugenkaart".
+Source of truth: `src/memory.asm` (segments) and `src/zp.asm` (zero page). Layout and level format: [ADR 0001](decisions/0001-level-format.md).
 
-## In use (M0)
+| Address | Content |
+| --- | --- |
+| `$02-$24` | engine zero page (frame counter, pointers, tile row buffer) |
+| `$30-$7F` | game logic zero page |
+| `$90-$FF` | KERNAL during loading; Exomizer decruncher uses `$9E/$9F`, `$A7/$A8`, `$AE/$AF`, `$FD-$FF` |
+| `$0801-$4FFF` | program (BASIC stub, code, generated tables) |
+| `$5000-$9FFF` | current level (crunched file is loaded and unpacked in place) |
+| `$A000-$BFFF` | variables (`Vars` segment, cleared at startup) |
+| `$C000-$C3FF` | screen A (+ sprite pointers at `$C3F8`) |
+| `$C400-$C7FF` | screen B (+ sprite pointers at `$C7F8`) |
+| `$C800-$CFFF` | level character set |
+| `$D000-$D7FF` | sprite shapes (pointers 64-95), under I/O |
+| `$D800-$D9FF` | font, 64 hires characters, under I/O |
+| `$DA00-$DFFF` | sprite shapes (pointers 104-127), under I/O |
+| `$E000-$FFBF` | sprite shapes (pointers 128-254) |
+| `$FFFA-$FFFF` | NMI/IRQ vectors (RAM, KERNAL banked out) |
 
-| Address | Content | Segment |
-| --- | --- | --- |
-| `$0002` | `zp_frame`, frame counter | zp.asm |
-| `$0003–$0004` | `zp_ptr0`, general purpose pointer | zp.asm |
-| `$0801–` | BASIC stub with the `SYS` line | Basic |
-| after the stub, up to `$4fff` | engine and game code | Code |
-
-M0 still uses the default VIC bank 0 with screen RAM at `$0400`. The switch to bank 3 (`$c000`) comes in M3.
+`$01` during play: `$35`. During loading and saving: `$36` (KERNAL on).
 
 ## Open point
 
-The KERNAL also uses zero page during level loading. Before M3, decide which zero page addresses to save and restore around a KERNAL LOAD, or reserve them up front.
+The `Code` segment is limited to `$4FFF`. Current use: see `build/kickass.log` after `python tools/build.py`.

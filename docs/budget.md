@@ -1,16 +1,27 @@
 # Frame budget
 
-A PAL frame is 63 × 312 = 19,656 cycles. Measurements start in M3. The design budget is in PLAN.md under "Framebudget".
+A PAL frame is 63 × 312 = 19,656 cycles. The design budget is in PLAN.md under "Framebudget". Measured values come from the M3 scroll test (`tests/scenarios/test_scroll.py`). They are taken with CIA2 timer A, so badline and sprite DMA delays are included.
+
+## Scroll engine (M3, measured 16 October 2026 in VICE 3.9)
+
+| Part | Measured | Notes |
+| --- | --- | --- |
+| Render one row of the back buffer | 994 cycles | 25 rows = ~25,000 cycles per coarse step, spread over the free time of several frames |
+| Colour RAM from screen RAM (in the IRQ at line 251) | 17,568 cycles | stays ahead of the beam: row 24 must be done by 19,152 cycles after line 251 |
+| Swap + fine scroll + sprite registers | < 400 cycles | every frame |
+
+Scroll test path: 410 frames at up to 3 px per frame horizontally and 1 px vertically. **0 frames lost.** In 28 frames the screen showed the nearest position the front buffer allowed (the camera waited one frame for the back buffer).
+
+## Consequences
+
+- A coarse step costs about 25,000 (render) + 17,600 (colour) cycles. At walking speed (2-3 px per frame, a coarse step every 3-4 frames) that is 11,000-14,000 cycles per frame on average. About 5,000 cycles per frame remain for game logic.
+- The planned reserve of 6,400 cycles does not cover the colour update. The design was changed accordingly: the colour update runs in the IRQ, and the game logic simply waits for the next frame (see ADR 0002).
+
+## Later milestones
 
 | Task | Budget | Measured | Milestone |
 | --- | --- | --- | --- |
-| Copy screen RAM (spread over frames) | 2,500 | — | M3 |
-| Draw new edge tiles | 1,000 | — | M3 |
 | Sprite multiplexer | 2,000 | — | M6 |
 | Player, physics, collision | 1,500 | — | M4 |
 | Actors (up to 8) | 3,000 | — | M6 |
 | Sound effects | 600 | — | M8 |
-
-## Known problem in the design
-
-In the swap frame, updating colour RAM costs about 8,000 cycles according to the plan, but the reserve is only 6,400. At ~11–12 cycles per character for about 900 characters it may well be more than 8,000. M3 has to measure this. Options: spread the colour RAM update over two frames, or skip other tasks in the swap frame.

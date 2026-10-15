@@ -295,18 +295,23 @@ def merge_chars(chars: list[Quantised], use: list[int], shared, limit: int):
     return [chars[i] for i in alive], remap, merged
 
 
-def preview(lvl: C64Level, scale: int = 1):
-    """Render the level as the C64 would show it (fat pixels doubled to hires width)."""
-    from PIL import Image
-    char_rgb = [C64_PALETTE[c.colours(lvl.shared)] for c in lvl.chars]
+def index_image(lvl: C64Level) -> np.ndarray:
+    """The level as C64 colour indices, as the VIC would show it (fat pixels doubled)."""
+    char_idx = [c.colours(lvl.shared) for c in lvl.chars]
     for g in lvl.anims:                                  # show frame 0 of animated chars
         for pos in range(4):
-            char_rgb[g.first_char + pos] = C64_PALETTE[g.frames[0][pos].colours(lvl.shared)]
-    img = np.zeros((lvl.height * 16, lvl.width * 16, 3), dtype=np.uint8)
+            char_idx[g.first_char + pos] = g.frames[0][pos].colours(lvl.shared)
+    img = np.zeros((lvl.height * 16, lvl.width * 16), dtype=np.uint8)
     for y, row in enumerate(lvl.map):
         for x, t in enumerate(row):
             for pos, ch in enumerate(lvl.tiles[t]):
                 cy, cx = y * 16 + (pos // 2) * 8, x * 16 + (pos % 2) * 8
-                img[cy:cy + 8, cx:cx + 8] = np.repeat(char_rgb[ch], 2, axis=1)
-    out = Image.fromarray(img)
+                img[cy:cy + 8, cx:cx + 8] = np.repeat(char_idx[ch], 2, axis=1)
+    return img
+
+
+def preview(lvl: C64Level, scale: int = 1):
+    """Render the level as the C64 would show it, with Pepto's palette."""
+    from PIL import Image
+    out = Image.fromarray(C64_PALETTE[index_image(lvl)].astype(np.uint8))
     return out.resize((out.width * scale, out.height * scale), Image.NEAREST) if scale > 1 else out
