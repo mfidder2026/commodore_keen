@@ -12,9 +12,7 @@ import toolchain as tc
     ("x64sc", lambda: tc.vice_bin("x64sc")),
     ("c1541", lambda: tc.vice_bin("c1541")),
     ("dosbox", tc.dosbox),
-    pytest.param("exomizer", tc.exomizer, marks=pytest.mark.xfail(
-        raises=tc.ToolNotFound,
-        reason="official download is offline (Oct 2026); not needed before level loading in M3")),
+    ("exomizer", tc.exomizer),
 ])
 def test_tool_is_installed(name, locate):
     assert locate().is_file(), name

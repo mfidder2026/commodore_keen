@@ -67,7 +67,7 @@ def dosbox() -> Path:
 
 
 def exomizer() -> Path:
-    return _find("EXOMIZER", "exomizer/" + _exe("exomizer"))
+    return _find("EXOMIZER", "exomizer/win32/" + _exe("exomizer"))
 
 
 def run(cmd: list[str | Path], **kwargs) -> subprocess.CompletedProcess:

@@ -13,11 +13,18 @@ Recorded in M0 on 16 October 2026. `tests/unit/test_toolchain.py` checks that ev
 | py65 | 1.2.0 | pip (user) |
 | Pillow | 12.3.0 | pip |
 | Git | 2.54.0 | PATH |
-| Exomizer | **missing** | `../c64/exomizer/exomizer.exe` |
+| Exomizer | 3.1.0 | `../c64/exomizer/win32/exomizer.exe` |
 
 ## Exomizer
 
-The official download (Bitbucket wiki of magli143) has been offline since at least October 2026, and this PC has no C compiler to build the source. Exomizer is not needed before level loading (M3). The toolchain test marks it as an expected failure until then.
+The official download (Bitbucket wiki of magli143) is offline. The files came from the user's own downloads and are all in `../c64/exomizer/`:
+
+- `win32/exomizer.exe`: the build the project uses, from the full 3.1.0 zip.
+- `win32_standalone/`: the separate win32 zip (also v3.1.0, a different build); not used.
+- `src/`, `exodecrs/`, `rawdecrs/`: source and the decrunchers for in-game loading (M3).
+- `exodecrunch_3.1.0_64tass.asm`: the decruncher in 64tass syntax. It has to be ported to KickAssembler syntax before use.
+
+`test_exomizer_sfx_runs_title` checks that an `exomizer sfx sys`-crunched build shows the same title screen in VICE.
 
 ## Lookup order
 

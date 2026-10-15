@@ -31,15 +31,28 @@ def test_debug_cartridge_exit_code():
     assert x64sc("-autostart", OUT / "m0_exitcode.prg") == 0
 
 
-def test_title_screen_matches_golden(built_d64):
-    shot = OUT / "m0_title.png"
+def assert_matches_golden(program: Path, shot_name: str, golden_name: str) -> None:
+    shot = OUT / shot_name
     shot.unlink(missing_ok=True)
-    x64sc("-exitscreenshot", shot, "-autostart", built_d64, cycles=10_000_000)
+    x64sc("-exitscreenshot", shot, "-autostart", program, cycles=10_000_000)
     assert shot.is_file(), "VICE did not write a screenshot"
 
-    golden = GOLDEN / "m0_title.png"
+    golden = GOLDEN / golden_name
     if os.environ.get("UPDATE_GOLDEN") == "1":
         shutil.copyfile(shot, golden)
-    assert golden.is_file(), "no golden image yet; review build/test/m0_title.png and rerun with UPDATE_GOLDEN=1"
+    assert golden.is_file(), f"no golden image yet; review {shot} and rerun with UPDATE_GOLDEN=1"
     diff = ImageChops.difference(Image.open(shot).convert("RGB"), Image.open(golden).convert("RGB"))
     assert diff.getbbox() is None, f"screenshot differs from golden in {diff.getbbox()}"
+
+
+def test_title_screen_matches_golden(built_d64):
+    assert_matches_golden(built_d64, "m0_title.png", "m0_title.png")
+
+
+def test_exomizer_sfx_runs_title(built_d64):
+    """The Exomizer-crunched program decrunches itself and shows the same title screen."""
+    crunched = OUT / "m0_title_sfx.prg"
+    result = tc.run([require(tc.exomizer), "sfx", "sys", "-q", "-o", crunched, tc.BUILD / tc.PRG_NAME],
+                    capture_output=True, text=True)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert_matches_golden(crunched, "m0_title_sfx.png", "m0_title.png")
