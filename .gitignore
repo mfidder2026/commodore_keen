@@ -1,0 +1,11 @@
+# No id Software data or third-party reference code in git
+data/original/
+reference/
+build/
+
+# Locally installed toolchain (VICE, KickAssembler, Exomizer, JDK)
+.tools/
+
+__pycache__/
+*.pyc
+.pytest_cache/
