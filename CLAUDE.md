@@ -18,6 +18,11 @@ PLAN.md bevat ontwerp, mijlpalen en acceptatiecriteria. Lees het bij elke nieuwe
 - python tools/test.py     pytest, py65-tests en VICE-scenario's
 - python tools/run.py      start de build in VICE
 - python tools/deploy.py   start de build op de C64 Ultimate (env C64U_HOST, optioneel C64U_PASSWORD)
+- python -m tools.convert  decodeert data/original/ naar build/original/ (PNG's, summary.json)
+- python tools/test.py -m dosbox   vergelijkt de converter met Keen 1 in DOSBox (traag, opent een venster)
+
+Renders, schermafbeeldingen en andere afgeleide id-data blijven in build/; tests slaan alleen
+aantallen en hashes op. Formaten en bevindingen staan in docs/formats.md.
 
 Tools staan in de gedeelde map `../c64` (java, kick, vice, dosbox). Volgorde: omgevingsvariabele
 (JAVA, KICKASS_JAR, VICE_DIR, DOSBOX, EXOMIZER), dan C64_TOOLS (standaard ../c64), dan `.tools/`,

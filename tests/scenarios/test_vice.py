@@ -19,23 +19,24 @@ OUT = tc.BUILD / "test"
 CYCLE_LIMIT = 30_000_000
 
 
-def x64sc(*args, cycles: int = CYCLE_LIMIT) -> int:
+def x64sc(*args, cycles: int = CYCLE_LIMIT):
     cmd = [require(lambda: tc.vice_bin("x64sc")), "-default", "-pal", "-warp",
            "-sounddev", "dummy", "-debugcart", "-limitcycles", cycles, *args]
-    return tc.run(cmd, capture_output=True, timeout=120).returncode
+    return tc.run(cmd, capture_output=True, text=True, errors="replace", timeout=120)
 
 
 def test_debug_cartridge_exit_code():
     require(tc.kickass_jar)
     assemble(HERE / "m0_exitcode.asm", OUT)
-    assert x64sc("-autostart", OUT / "m0_exitcode.prg") == 0
+    assert x64sc("-autostart", OUT / "m0_exitcode.prg").returncode == 0
 
 
 def assert_matches_golden(program: Path, shot_name: str, golden_name: str) -> None:
     shot = OUT / shot_name
     shot.unlink(missing_ok=True)
-    x64sc("-exitscreenshot", shot, "-autostart", program, cycles=10_000_000)
-    assert shot.is_file(), "VICE did not write a screenshot"
+    result = x64sc("-exitscreenshot", shot, "-autostart", program, cycles=10_000_000)
+    assert shot.is_file(), (f"VICE did not write a screenshot (exit {result.returncode})\n"
+                            + result.stdout[-2000:] + result.stderr[-2000:])
 
     golden = GOLDEN / golden_name
     if os.environ.get("UPDATE_GOLDEN") == "1":
