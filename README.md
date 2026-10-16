@@ -88,6 +88,7 @@ Joystick in port 2, or the keyboard.
 | --- | --- |
 | Works | title screen, world map with teleporters and barriers, all 16 levels, items, doors, enemies, raygun, pogo stick, status screen, game over and the ending; PAL and NTSC; joystick and keyboard |
 | Proven | a planner plays the real 6502 code in py65 and finds routes through levels 1-11, 13, 14 and 16; the routes from a fresh game replay in VICE to the exit without losing a life |
+| Blocking | in level 16 the everclear (the last ship part) cannot be reached yet: it lies next to the exit, and Keen always touches the exit first. How the original handles this has to come from the reconstructed source |
 | Not yet | music (needs tunes with permission), highscores, a faster loader; enemy behaviour and some physics are estimates until checked against the reconstructed source; tested in emulators only, not yet on real hardware |
 
 Details: [docs/status.md](docs/status.md). Design and milestones: [PLAN.md](PLAN.md).
