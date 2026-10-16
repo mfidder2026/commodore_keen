@@ -35,10 +35,12 @@ play_level:
 play_loop:
     jsr wait_frame                // A = frames since the last iteration
     jsr perf_count
+    jsr frames_to_ticks           // NTSC: 5 ticks per 6 frames
     cmp #MAX_TICKS_PER_FRAME + 1
     bcc !+
     lda #MAX_TICKS_PER_FRAME
 !:  sta ticks_due
+    beq play_output
 !:
 #if INPUTSCRIPT
     TimerRead(perf_t0)
@@ -52,6 +54,7 @@ play_loop:
     bne play_done
     dec ticks_due
     bne !-
+play_output:
     jsr frame_output
     jmp play_loop
 play_done:

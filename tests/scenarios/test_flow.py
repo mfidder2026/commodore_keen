@@ -12,7 +12,7 @@ import subprocess
 import pytest
 
 import toolchain as tc
-from conftest import require
+from conftest import require, run_vice
 
 OUT = tc.BUILD / "test"
 JOY_RIGHT = 8
@@ -46,10 +46,9 @@ def flow():
     shot = OUT / "m7_flow.png"
     OUT.mkdir(parents=True, exist_ok=True)
     shot.unlink(missing_ok=True)
-    run = tc.run([require(lambda: tc.vice_bin("x64sc")), "-default", "-pal", "-warp",
+    run = run_vice(["-default", "-pal", "-warp",
                   "-sounddev", "dummy", "-debugcart", "-limitcycles", 600_000_000,
-                  "-exitscreenshot", shot, "-autostart", d64],
-                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=900)
+                  "-exitscreenshot", shot, "-autostart", d64], timeout=900)
     stats = OUT / "m7_stats.prg"
     stats.unlink(missing_ok=True)
     tc.run([tc.vice_bin("c1541"), "-attach", d64, "-read", "stats", stats], capture_output=True)

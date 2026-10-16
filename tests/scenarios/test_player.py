@@ -16,7 +16,7 @@ import subprocess
 import pytest
 
 import toolchain as tc
-from conftest import require
+from conftest import require, run_vice
 
 OUT = tc.BUILD / "test"
 JUMP_TICK = 20 + 86 + 74                      # first tick with the joystick up
@@ -30,10 +30,9 @@ def track():
         pytest.skip("Keen 1 files not in data/original/")
     from build import build
     d64 = build(["PLAYERTEST", "INPUTSCRIPT"])
-    result = tc.run([require(lambda: tc.vice_bin("x64sc")), "-default", "-pal", "-warp",
+    result = run_vice(["-default", "-pal", "-warp",
                      "-sounddev", "dummy", "-debugcart", "-limitcycles", 80_000_000,
-                     "-autostart", d64],
-                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=300)
+                     "-autostart", d64], timeout=300)
     assert result.returncode == 0, f"player test did not finish (exit {result.returncode})"
     rec = OUT / "m4_rec.prg"
     rec.unlink(missing_ok=True)

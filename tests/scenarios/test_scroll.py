@@ -15,7 +15,7 @@ import pytest
 from PIL import Image
 
 import toolchain as tc
-from conftest import require
+from conftest import require, run_vice
 
 OUT = tc.BUILD / "test"
 # Window of the 38 x 24 character display inside a VICE PAL screenshot (384 x 272):
@@ -35,13 +35,10 @@ def run():
     shot = OUT / "m3_scroll.png"
     shot.unlink(missing_ok=True)
     OUT.mkdir(parents=True, exist_ok=True)
-    result = tc.run([require(lambda: tc.vice_bin("x64sc")), "-default", "-pal", "-warp",
+    result = run_vice(["-default", "-pal", "-warp",
                      "-sounddev", "dummy", "-debugcart", "-limitcycles", 80_000_000,
                      "-VICIIextpal", "-VICIIpalette", "pepto-pal.vpl", "-VICIIfilter", 0,
-                     "-exitscreenshot", shot, "-autostart", d64],
-                    # VICE 3.9 on Windows sometimes crashes (0xC0000409) when its output
-                    # goes to a pipe; it is not needed here.
-                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=300)
+                     "-exitscreenshot", shot, "-autostart", d64], timeout=300)
     assert result.returncode == 0, f"scroll test did not finish (exit {result.returncode})"
     stats_file = OUT / "m3_stats.prg"
     stats_file.unlink(missing_ok=True)

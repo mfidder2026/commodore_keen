@@ -25,6 +25,19 @@ def built_d64() -> Path:
     return build()
 
 
+def run_vice(args: list, timeout: int = 900, attempts: int = 2):
+    """Run x64sc headless. VICE 3.9 on Windows sometimes crashes (exit code is a Windows
+    exception code above 255) when the machine is busy; such a crash is retried. Normal
+    results (0, or 1 when -limitcycles ran out) are returned as they are."""
+    import subprocess
+    exe = require(lambda: tc.vice_bin("x64sc"))
+    for _ in range(attempts):
+        result = tc.run([exe, *args], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=timeout)
+        if result.returncode <= 255:
+            return result
+    return result
+
+
 def read_vice_labels(path: Path) -> dict[str, int]:
     """Parse a VICE label file (lines like 'al C:080d .start')."""
     labels = {}

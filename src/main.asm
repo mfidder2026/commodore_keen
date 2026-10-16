@@ -15,6 +15,7 @@
 #import "engine/sprites.asm"
 #import "engine/timing.asm"
 #import "engine/sound.asm"
+#import "engine/video.asm"
 #import "game/physics.asm"
 #import "game/input.asm"
 #import "game/player.asm"
@@ -63,6 +64,7 @@ start:
     sta irq_hook_vector
     lda #>irq_nothing
     sta irq_hook_vector + 1
+    jsr video_detect              // PAL or NTSC (interrupts are still off)
     jsr system_init
     jsr sprites_init
     jsr sound_init

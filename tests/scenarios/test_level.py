@@ -14,7 +14,7 @@ import subprocess
 import pytest
 
 import toolchain as tc
-from conftest import require
+from conftest import require, run_vice
 
 OUT = tc.BUILD / "test"
 JOY_UP, JOY_RIGHT, JOY_FIRE = 1, 8, 16
@@ -26,10 +26,9 @@ def run_script(level: int, script: list[tuple[int, int]], tag: str, extra=()) ->
     (tc.BUILD / "generated" / "gen_script.asm").write_text("\n".join(lines) + "\n")
     from build import build
     d64 = build(["LEVELTEST", "INPUTSCRIPT", *extra])
-    run = tc.run([require(lambda: tc.vice_bin("x64sc")), "-default", "-pal", "-warp",
+    run = run_vice(["-default", "-pal", "-warp",
                   "-sounddev", "dummy", "-debugcart", "-limitcycles", 300_000_000,
-                  "-autostart", d64],
-                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=900)
+                  "-autostart", d64], timeout=900)
     stats = OUT / f"{tag}_stats.prg"
     OUT.mkdir(parents=True, exist_ok=True)
     stats.unlink(missing_ok=True)

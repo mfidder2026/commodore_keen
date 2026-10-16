@@ -14,15 +14,18 @@ map_reenter:
     jsr map_enter
 map_frame:
     jsr wait_frame
+    jsr frames_to_ticks           // NTSC: 5 ticks per 6 frames
     cmp #MAX_TICKS_PER_FRAME + 1
     bcc !+
     lda #MAX_TICKS_PER_FRAME
 !:  sta ticks_due
+    beq map_output
 !:  jsr map_tick
     lda map_result
     bne map_event
     dec ticks_due
     bne !-
+map_output:
     jsr scroll_update
     jsr player_draw
     jsr map_draw_marks

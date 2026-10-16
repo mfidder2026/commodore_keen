@@ -65,9 +65,20 @@ sound_play_done:
     ldx snd_save_x
     rts
 
-// One frame of sound, from the raster IRQ. ~60 cycles.
+// One frame of sound, from the raster IRQ. ~60 cycles (NTSC ~110).
+// NTSC: every sixth frame is skipped (50 sound steps per second) and the frequency is
+// scaled by 985248 / 1022727 = 0.9634 for the faster SID clock.
 sound_tick:
-    lda snd_active
+    lda is_ntsc
+    beq !+
+    inc snd_div
+    lda snd_div
+    cmp #6
+    bcc !+
+    lda #0
+    sta snd_div
+    rts
+!:  lda snd_active
     beq sound_off
     lda snd_ptr
     sta zp_irq_ptr
@@ -85,9 +96,16 @@ sound_tick:
     lda #0                        // end of the sound
     sta snd_active
     beq sound_off
-!:  sta SID
-    stx SID + 1
-    ora SID + 1
+!:  sta snd_freq
+    stx snd_freq + 1
+    lda is_ntsc
+    beq !+
+    jsr ntsc_pitch
+!:  lda snd_freq
+    sta SID
+    lda snd_freq + 1
+    sta SID + 1
+    ora snd_freq                  // SID registers are write-only: test the copy
     beq sound_silent
     lda #SOUND_WAVE
     sta SID + 4
@@ -108,8 +126,46 @@ sound_off:
     sta SID + 4
     rts
 
+// snd_freq *= 0.9634 (1 - 1/32 - 1/256 - 1/512 = 0.9629)
+ntsc_pitch:
+    lda snd_freq + 1
+    sta snd_tmp + 1
+    lda snd_freq
+    .for (var i = 0; i < 5; i++) {
+        lsr snd_tmp + 1
+        ror
+    }
+    sta snd_tmp                   // v >> 5
+    sec
+    lda snd_freq
+    sbc snd_tmp
+    sta snd_freq
+    lda snd_freq + 1
+    sbc snd_tmp + 1
+    sta snd_freq + 1
+    lda snd_freq + 1              // v >> 8 (of the reduced value; close enough)
+    sta snd_tmp
+    lsr
+    sta snd_tmp + 1               // v >> 9
+    sec
+    lda snd_freq
+    sbc snd_tmp
+    sta snd_freq
+    bcs !+
+    dec snd_freq + 1
+!:  sec
+    lda snd_freq
+    sbc snd_tmp + 1
+    sta snd_freq
+    bcs !+
+    dec snd_freq + 1
+!:  rts
+
 .segment Vars
 snd_active:   .byte 0
 snd_priority: .byte 0
 snd_ptr:      .word 0
 snd_save_x:   .byte 0
+snd_div:      .byte 0
+snd_freq:     .word 0
+snd_tmp:      .word 0
