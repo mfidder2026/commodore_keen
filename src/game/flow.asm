@@ -111,20 +111,7 @@ title_screen:
     ldx #<disclaimer3
     ldy #>disclaimer3
     jsr print_centred
-    lda #14
-    sta text_colour
-    lda #18
-    ldx #<controls1
-    ldy #>controls1
-    jsr print_centred
-    lda #19
-    ldx #<controls2
-    ldy #>controls2
-    jsr print_centred
-    lda #20
-    ldx #<controls3
-    ldy #>controls3
-    jsr print_centred
+    jsr print_controls
     lda #1
     sta text_colour
     lda #23
@@ -134,8 +121,66 @@ title_screen:
 #if INPUTSCRIPT
     rts                           // tests start straight away
 #else
-    jmp wait_fire
+    // F1 switches the control layout, fire (or space) starts
+!:  jsr wait_frame
+    jsr input_read
+    jsr read_f1
+    beq title_fire
+    lda ctrl_alt
+    eor #1
+    sta ctrl_alt
+    jsr print_controls
+!:  jsr wait_frame                // wait until F1 is released
+    jsr read_f1
+    bne !-
+title_fire:
+    lda joy_new
+    and #JOY_FIRE | KEY_SPACE
+    beq !--
+    rts
 #endif
+
+// Rows 18-21: the current control layout.
+print_controls:
+    lda #14
+    sta text_colour
+    lda ctrl_alt
+    asl
+    asl
+    asl                           // 4 lines of 2 bytes per layout
+    tax
+    lda #18
+    sta zp_tmp3
+!:  stx controls_index
+    lda control_lines, x
+    pha
+    lda control_lines + 1, x
+    tay
+    pla
+    tax
+    lda zp_tmp3
+    jsr print_centred
+    inc zp_tmp3
+    ldx controls_index
+    inx
+    inx
+    txa
+    and #7
+    bne !-
+    rts
+
+// Keyboard: F1 is row 0, column 4. Returns Z clear (bne) while pressed.
+read_f1:
+    lda #%11111110
+    sta $dc00
+    lda $dc01
+    eor #$ff
+    and #%00010000
+    tax
+    lda #$ff
+    sta $dc00
+    txa
+    rts
 
 // Status (RUN/STOP): score, lives, ammo, pogo, ship parts, keycards. Fire continues.
 status_screen:
@@ -305,12 +350,21 @@ disclaimer2:     .text "NOT AFFILIATED WITH ID SOFTWARE"
                  .byte 0
 disclaimer3:     .text "ORIGINAL GAME (C) 1990 ID SOFTWARE"
                  .byte 0
-controls1:       .text "JOYSTICK PORT 2: UP JUMPS, FIRE SHOOTS"
+// All control lines are 30 characters, so switching overwrites the old text.
+controls1:       .text "    UP JUMPS, FIRE SHOOTS     "
                  .byte 0
-controls2:       .text "SPACE OR DOWN+FIRE: POGO"
+controls2:       .text "   SPACE OR DOWN+FIRE: POGO   "
                  .byte 0
-controls3:       .text "RUN/STOP: STATUS AND PAUSE"
+controls3:       .text "  RUN/STOP: STATUS AND PAUSE  "
                  .byte 0
+controls4:       .text "F1: OTHER CONTROLS (JOY PORT 2)"
+                 .byte 0
+alt_controls1:   .text " FIRE JUMPS, DOWN+FIRE SHOOTS "
+                 .byte 0
+alt_controls2:   .text "         SPACE: POGO          "
+                 .byte 0
+control_lines:   .word controls1, controls2, controls3, controls4
+                 .word alt_controls1, alt_controls2, controls3, controls4
 press_fire_text: .text "PRESS FIRE"
                  .byte 0
 status_title:    .text "STATUS"
@@ -353,4 +407,5 @@ end_text4:       .text "THE END"
                  .byte 0
 
 .segment Vars
-entered_level: .byte 0
+entered_level:  .byte 0
+controls_index: .byte 0

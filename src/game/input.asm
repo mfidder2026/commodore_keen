@@ -52,3 +52,42 @@ input_read:
     and joy
     sta joy_new
     rts
+
+// Alternative layout (ctrl_alt = 1), in levels only: fire jumps, down + fire shoots,
+// pogo only with space. Turns the joystick into the standard bits (up = jump, fire =
+// shoot) so the game logic stays the same; down is dropped (no down+fire pogo).
+remap_controls:
+    lda ctrl_alt
+    beq remap_done
+    lda joy
+    and #JOY_LEFT | JOY_RIGHT | KEY_SPACE | KEY_STOP
+    sta zp_tmp0
+    lda joy
+    and #JOY_FIRE
+    beq remap_store
+    lda joy
+    and #JOY_DOWN
+    beq remap_jump
+    lda #JOY_FIRE                 // down + fire: shoot
+    jmp remap_add
+remap_jump:
+    lda #JOY_UP                   // fire alone: jump
+remap_add:
+    ora zp_tmp0
+    sta zp_tmp0
+remap_store:
+    lda zp_tmp0
+    sta joy
+    lda remap_prev
+    eor #$ff
+    and joy
+    sta joy_new
+    lda joy
+    sta remap_prev
+remap_done:
+    rts
+
+.segment Vars
+ctrl_alt:   .byte 0               // 0 = up jumps (standard), 1 = fire jumps
+remap_prev: .byte 0
+.segment Code

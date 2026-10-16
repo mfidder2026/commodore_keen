@@ -126,6 +126,7 @@ frame_output:
 
 game_tick:
     jsr input_read
+    jsr remap_controls
     lda joy_new
     and #KEY_STOP
     beq !+
