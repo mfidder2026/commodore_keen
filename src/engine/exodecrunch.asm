@@ -25,7 +25,7 @@
 //
 // -------------------------------------------------------------------
 // ALTERED SOURCE VERSION: exodecrunch.asm from Exomizer 3.1.0 (64tass syntax),
-// ported to KickAssembler syntax for Commander Keen C64. Only the default
+// ported to KickAssembler syntax for Commodore Keen. Only the default
 // configuration is kept (backwards decrunching, bit stream -P39, get_bits not
 // inlined); get_crunched_byte reads the loaded file backwards from exo_end.
 // -------------------------------------------------------------------

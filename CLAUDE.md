@@ -1,7 +1,7 @@
-# Commander Keen C64 — instructies voor Claude Code
+# Commodore Keen — instructies voor Claude Code
 
 ## Doel
-Commander Keen 1 (episode 1) als onofficiële fanport voor de stock PAL C64, in 6502-assembly.
+Commodore Keen: Commander Keen 1 (episode 1) als onofficiële fanport voor de stock PAL C64, in 6502-assembly.
 PLAN.md bevat ontwerp, mijlpalen en acceptatiecriteria. Lees het bij elke nieuwe sessie.
 
 ## Harde regels
@@ -14,7 +14,7 @@ PLAN.md bevat ontwerp, mijlpalen en acceptatiecriteria. Lees het bij elke nieuwe
 - Hardwarefeiten (VIC-II, SID, CIA) haal je uit documentatie, niet uit je geheugen.
 
 ## Commando's
-- python tools/build.py    bouwt build/commander-keen-c64.d64
+- python tools/build.py    bouwt build/commodore-keen.d64
 - python tools/test.py     pytest, py65-tests en VICE-scenario's
 - python tools/run.py      start de build in VICE
 - python tools/deploy.py   start de build op de C64 Ultimate (env C64U_HOST, optioneel C64U_PASSWORD)
@@ -22,7 +22,9 @@ PLAN.md bevat ontwerp, mijlpalen en acceptatiecriteria. Lees het bij elke nieuwe
 - python tools/test.py -m dosbox   vergelijkt de converter met Keen 1 in DOSBox (traag, opent een venster)
 
 Renders, schermafbeeldingen en andere afgeleide id-data blijven in build/; tests slaan alleen
-aantallen en hashes op. Formaten en bevindingen staan in docs/formats.md.
+aantallen en hashes op. Uitzondering (16 oktober 2026, goedgekeurd): de README-schermafbeeldingen in
+docs/screenshots/ (python tools/screenshots.py). De speelbare .d64 gaat alleen als bestand bij een
+GitHub-release (https://github.com/mfidder2026/commodore_keen), nooit in git. Formaten en bevindingen staan in docs/formats.md.
 
 Hulpmiddelen (tools/):
 - bot.py / planner.py / episode.py: invoer zoeken die een level of het hele spel uitspeelt,

@@ -346,7 +346,7 @@ the_end:
     jmp wait_fire
 
 .encoding "ascii"
-title_text:      .text "COMMANDER KEEN C64"
+title_text:      .text "COMMODORE KEEN"
                  .byte 0
 subtitle_text:   .text "EPISODE ONE: MAROONED ON MARS"
                  .byte 0

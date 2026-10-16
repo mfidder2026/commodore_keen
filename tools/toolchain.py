@@ -16,9 +16,9 @@ C64_TOOLS = Path(os.environ.get("C64_TOOLS", ROOT.parent / "c64"))
 BUILD = ROOT / "build"
 SRC = ROOT / "src"
 
-PRG_NAME = "commander-keen-c64.prg"
-D64_NAME = "commander-keen-c64.d64"
-DISK_TITLE = "commander keen,64"
+PRG_NAME = "commodore-keen.prg"
+D64_NAME = "commodore-keen.d64"
+DISK_TITLE = "commodore keen,64"
 
 
 class ToolNotFound(RuntimeError):

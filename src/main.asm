@@ -1,4 +1,4 @@
-// Commander Keen C64 - entry point.
+// Commodore Keen - entry point.
 // An unofficial, non-commercial fan port. Not affiliated with id Software.
 
 #import "memory.asm"

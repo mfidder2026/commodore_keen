@@ -43,4 +43,4 @@
 .segmentdef Code  [startAfter="Basic", max=$4fff]
 .segmentdef Vars  [start=$a000, max=$a5ff, virtual]   // $a600: generated colour code
 
-.file [name="commander-keen-c64.prg", segments="Basic,Code"]
+.file [name="commodore-keen.prg", segments="Basic,Code"]

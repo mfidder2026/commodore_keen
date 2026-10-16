@@ -8,7 +8,7 @@ Commander Keen 1 past goed op de C64: het is een 2D-tegelspel, en soepel scrolle
 
 | Onderwerp | Besluit |
 | --- | --- |
-| Naam | Commander Keen C64, een onofficiële, niet-commerciële fanport |
+| Naam | Commodore Keen, een onofficiële, niet-commerciële fanport van Commander Keen 1 |
 | Doelmachine | Stock PAL C64 met 1541; je C64 Ultimate is testhardware; NTSC als allerlaatste stap |
 | Weergave | Multicolor-tekenmodus, soepel scrollen in 8 richtingen, dubbel gebufferd |
 | Tegels | 1 Keen-tegel = 2×2 tekens; eigen tekenset per level (max. 256 tekens) |
@@ -169,7 +169,7 @@ De repo bevat geen enkel bestand van id Software: de converter leest jouw eigen 
 - **Sharewarebestanden.** Episode 1 is als shareware vrij te downloaden. Zet de bestanden in `data/original/`; die map staat in `.gitignore`.
 - **Delen.** Je publiceert een kant-en-klare .d64, zoals Wolf64 ook deed. Die bevat omgezette Keen-graphics en levels, en dat is juridisch een grijs gebied. Houd het daarom gratis en niet-commercieel, zet er een duidelijke disclaimer bij, en haal het offline als de rechthebbende daarom vraagt.
 - **Licentie van je code.** Vertaal je logica uit de gereconstrueerde broncode, dan wordt jouw code een afgeleide en valt die ook onder de GPL. Controleer welke GPL-versie de reconstructie gebruikt, en meng geen code uit bronnen met een onverenigbare versie.
-- **Naam.** ‘Commander Keen’ is een merknaam van de rechthebbende. De titel wordt ‘Commander Keen C64’. Zet in de README en op het titelscherm dat het een onofficiële, niet-commerciële fanport is, zonder band met id Software.
+- **Naam.** ‘Commander Keen’ is een merknaam van de rechthebbende. De titel wordt ‘Commodore Keen’ (16 oktober 2026; eerst ‘Commander Keen C64’). Zet in de README en op het titelscherm dat het een onofficiële, niet-commerciële fanport is, zonder band met id Software.
 - **Muziek.** Alle tunes in de HVSC, de grote SID-verzameling, zijn auteursrechtelijk beschermd; buiten privégebruik heb je toestemming van de componist nodig. Vraag die per tune en zet de componist op het creditscherm, of kies tunes met een vrije licentie, zoals CC0-tunes op [OpenGameArt](https://opengameart.org/content/melodic-adventure-theme-and-rhythmic-variation-c64-style). Bron: [HVSC-copyrightverklaring](https://hafnium.prg.dtu.dk/HVSC/C64Music/DOCUMENTS/HVSC.txt).
 
 ## Repostructuur en CLAUDE.md
@@ -177,7 +177,7 @@ De repo bevat geen enkel bestand van id Software: de converter leest jouw eigen 
 Exporteer dit document als Markdown naar `PLAN.md` in de repo, en zet de CLAUDE.md hieronder ernaast. Dan werken jij en Claude Code vanuit dezelfde bron.
 
 ```
-commander-keen-c64/
+commodore-keen/
 ├── CLAUDE.md
 ├── PLAN.md                ← dit document, geëxporteerd
 ├── data/original/         ← jouw Keen 1-sharewarebestanden (niet in git)
@@ -201,7 +201,7 @@ commander-keen-c64/
 ```
 
 ```markdown
-# Commander Keen C64 — instructies voor Claude Code
+# Commodore Keen — instructies voor Claude Code
 
 ## Doel
 Commander Keen 1 (episode 1) als onofficiële fanport voor de stock PAL C64, in 6502-assembly.
@@ -217,7 +217,7 @@ PLAN.md bevat ontwerp, mijlpalen en acceptatiecriteria. Lees het bij elke nieuwe
 - Hardwarefeiten (VIC-II, SID, CIA) haal je uit documentatie, niet uit je geheugen.
 
 ## Commando's
-- python tools/build.py    bouwt build/commander-keen-c64.d64
+- python tools/build.py    bouwt build/commodore-keen.d64
 - python tools/test.py     pytest, py65-tests en VICE-scenario's
 - python tools/run.py      start de build in VICE
 - python tools/deploy.py   start de build op de C64 Ultimate (env C64U_HOST)
@@ -266,7 +266,7 @@ Elf mijlpalen, in vaste volgorde; na elke mijlpaal volgt een demo op je C64 Ulti
    - Doel: alle vijanden en obstakels van episode 1, zoals Yorps, Gargs en Vorticons, plus het straalpistool en de sprite-multiplexer.
    - Klaar als: het gedrag per type klopt met de reconstructie; nooit meer dan 8 sprites op één rasterlijn; het spel zakt nergens onder 25 fps.
 8. **M7 — Wereldkaart en spelverloop**
-   - Doel: titelscherm met de naam Commander Keen C64 en disclaimer, wereldkaart, levels in- en uitgaan, levens, score, statusscherm en eindscherm.
+   - Doel: titelscherm met de naam Commodore Keen en disclaimer, wereldkaart, levels in- en uitgaan, levens, score, statusscherm en eindscherm.
    - Klaar als: de hele episode is van begin tot eind uit te spelen in VICE.
 9. **M8 — Geluid en muziek**
    - Doel: pc-speakereffecten omgezet naar de SID, plus gedownloade SID-tunes voor titelscherm, wereldkaart en eindscherm. Claude Code verplaatst elke tune met [sidreloc](https://www.linusakesson.net/software/sidreloc/index.php) naar het actorgebied (`$9800–$BFFF`), dat buiten de levels vrij is.
@@ -312,7 +312,7 @@ Beslissingen van 15 oktober 2026, en wat nog open staat:
 
 - [x] Besturing: joystick met één knop (indeling bij Spellus en invoer).
 - [x] Publicatie: een kant-en-klare .d64.
-- [x] Naam: Commander Keen C64.
+- [x] Naam: Commodore Keen (eerst Commander Keen C64).
 - [x] Muziek: ja, eigen muziek op de SID.
 - [x] NTSC: ja, als allerlaatste mijlpaal (M10).
 - [ ] Muziek wordt gedownload: kies de tunes en vraag per tune toestemming aan de componist, of kies tunes met een vrije licentie (CC0 of CC-BY).

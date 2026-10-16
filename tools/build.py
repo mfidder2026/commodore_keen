@@ -1,4 +1,4 @@
-"""Build build/commander-keen-c64.d64: convert assets, assemble, write the disk image.
+"""Build build/commodore-keen.d64: convert assets, assemble, write the disk image.
 
 Usage: python tools/build.py [-D SYMBOL ...]
   -D SYMBOL   pass a KickAssembler define (e.g. -D SCROLLTEST for the M3 scroll test)
