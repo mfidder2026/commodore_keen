@@ -24,6 +24,19 @@ PLAN.md bevat ontwerp, mijlpalen en acceptatiecriteria. Lees het bij elke nieuwe
 Renders, schermafbeeldingen en andere afgeleide id-data blijven in build/; tests slaan alleen
 aantallen en hashes op. Formaten en bevindingen staan in docs/formats.md.
 
+Hulpmiddelen (tools/):
+- bot.py / planner.py / episode.py: invoer zoeken die een level of het hele spel uitspeelt,
+  met de echte 6502-code in py65 (deterministisch, speelt identiek af in VICE)
+- hangcheck.py / pcsample.py / vicemon.py: VICE binary monitor; waar hangt of wacht de CPU
+- longbranch.py: maakt te verre branches lang (jeq/jne/... uit src/macros.asm)
+- dosbox_capture.py / measure_keen.py: het origineel meten in DOSBox
+
+Valkuilen die al eens misgingen:
+- $D011 nooit read-modify-write zonder `and #$7f` (bit 7 = raster-MSB, schrijven verzet de IRQ-lijn).
+- `sta` zet geen vlaggen: test een waarde opnieuw (tax/lda) voor beq/bne.
+- KickAssembler: .const vóór gebruik definiëren; gegenereerde tabellen in een echt segment importeren.
+- SID-registers zijn alleen-schrijven; KERNAL SAVE overschrijft geen bestaand bestand.
+
 Tools staan in de gedeelde map `../c64` (java, kick, vice, dosbox). Volgorde: omgevingsvariabele
 (JAVA, KICKASS_JAR, VICE_DIR, DOSBOX, EXOMIZER), dan C64_TOOLS (standaard ../c64), dan `.tools/`,
 dan het PATH. Zie tools/toolchain.py en docs/toolchain.md.
