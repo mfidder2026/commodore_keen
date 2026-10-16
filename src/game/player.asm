@@ -598,8 +598,14 @@ face:
 !:  sta p_sprite
     rts
 
-// Keep Keen inside the camera margins.
+// Keep Keen inside the camera margins, and the camera inside the level. Clamping here
+// (game logic) rather than only in scroll_update keeps actor activation identical
+// whether or not frames are drawn (py65 planning versus the real game).
 camera_follow:
+    jsr camera_follow_margins
+    jmp clamp_camera
+
+camera_follow_margins:
     PixelsOf(p_x, box_left)
     // screen x = px - cam_x
     sec

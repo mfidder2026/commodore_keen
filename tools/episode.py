@@ -24,6 +24,25 @@ DEFAULT_ORDER = [1, 3, 4, 7, 8, 16]
 SHIP = 20
 
 
+def cached_plan(level, max_nodes, carry, cache_dir: Path):
+    """planner.plan with a file cache keyed by level and carried state."""
+    import hashlib
+    import json
+    key = json.dumps({"level": level, "carry": {k: v.hex() for k, v in (carry or {}).items()}},
+                     sort_keys=True)
+    path = cache_dir / "routes" / (hashlib.sha1(key.encode()).hexdigest()[:16] + ".json")
+    if path.is_file():
+        data = json.loads(path.read_text())
+        return data["route"], {k: bytes.fromhex(v) for k, v in data["final"].items()}
+    route = planner.plan(level, max_nodes, verbose=False, carry=carry)
+    if route is None:
+        raise SystemExit(f"no route for level {level} with state {carry}")
+    final = planner.plan.final_state
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"key": key, "route": route, "final": {k: v.hex() for k, v in final.items()}}))
+    return route, final
+
+
 def plan_episode(order, max_nodes, cache_dir: Path):
     inputs: list[int] = []
     done: list[int] = []
@@ -37,10 +56,7 @@ def plan_episode(order, max_nodes, cache_dir: Path):
             raise SystemExit(f"could not enter level {level}")
         keen = tuple(int(v * 16) for v in walker.keen())
         print(f"level {level}: map walk {len(walker.inputs)} ticks", flush=True)
-        route = planner.plan(level, max_nodes, verbose=False, carry=carry)
-        if route is None:
-            raise SystemExit(f"no route for level {level} with state {carry}")
-        carry = planner.plan.final_state
+        route, carry = cached_plan(level, max_nodes, carry, cache_dir)
         print(f"level {level}: route {len(route)} ticks, state {carry}", flush=True)
         inputs += walker.inputs + route
         done.append(level)
