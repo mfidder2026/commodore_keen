@@ -83,8 +83,8 @@ kernal_load:
     lda #$ff
     sta $d019
     lda $d011
-    and #%11101111                // blank the screen while loading
-    sta $d011
+    and #%01101111                // blank the screen while loading; bit 7 must stay 0:
+    sta $d011                     // reading gives the raster MSB, writing sets the IRQ line MSB
     lda #$36                      // KERNAL on, BASIC off, I/O on
     sta $01
     lda #<$ea31
@@ -115,6 +115,7 @@ kernal_load:
     sta $01
     jsr irq_on
     lda $d011
+    and #$7f                      // never write back the raster MSB (IRQ line 507!)
     ora #%00010000
     sta $d011
     plp                           // restores C (error) and I = 0

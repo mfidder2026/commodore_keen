@@ -3,31 +3,13 @@
 // saved as STATS and VICE exits with code 0.
 
 #import "gen_script.asm"
+#import "script_input.asm"
 
 .segment Code
 
 flow_test:
-    lda #0
-    sta script_pos
-    sta script_left
+    jsr script_start
     jmp game_main
-
-script_input:
-    lda script_left
-    bne !+
-    ldx script_pos
-    lda input_script, x
-    beq script_finished
-    sta script_left
-    lda input_script + 1, x
-    sta script_joy
-    inx
-    inx
-    stx script_pos
-!:  dec script_left
-    lda script_joy
-    sta joy
-    rts
 
 script_finished:
     ldx #2
@@ -75,9 +57,6 @@ record_tick:
     rts
 
 .segment Vars
-script_pos:  .byte 0
-script_left: .byte 0
-script_joy:  .byte 0
 // levels done (3), score (3), lives, keen x (2), keen y (2), map mode, current level
 ft_stats:    .fill 13, 0
 ft_stats_end:

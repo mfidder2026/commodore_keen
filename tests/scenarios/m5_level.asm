@@ -5,16 +5,14 @@
 // or 1 (Keen died).
 
 #import "gen_script.asm"
+#import "script_input.asm"
 
 .segment Code
 
 level_test:
     jsr timer_init
     jsr game_new
-    lda #0
-    sta script_pos
-    sta script_left
-    sta script_done
+    jsr script_start
     lda #SCRIPT_LEVEL
     jsr play_level
     sta lt_stats                  // play_result
@@ -70,25 +68,7 @@ lt_name:
     .text "STATS"
 lt_name_end:
 
-script_input:
-    lda script_left
-    bne !+
-    ldx script_pos
-    lda input_script, x
-    beq script_end
-    sta script_left
-    lda input_script + 1, x
-    sta script_joy
-    inx
-    inx
-    stx script_pos
-!:  dec script_left
-    lda script_joy
-    sta joy
-    rts
-script_end:
-    lda #0
-    sta joy
+script_finished:
     lda #RESULT_QUIT              // checked by play_loop after this tick
     sta play_result
     rts
@@ -97,10 +77,6 @@ record_tick:
     rts
 
 .segment Vars
-script_pos:  .byte 0
-script_left: .byte 0
-script_joy:  .byte 0
-script_done: .byte 0
 // result, score (3, BCD), lives, ammo, ship parts, keycards, max frames per
 // iteration, lost frames (2)
 lt_stats:    .fill 15, 0

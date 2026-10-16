@@ -40,6 +40,12 @@ start:
     sta $d020
     sta $d021
     sta $d015
+    // Zero page of the game: clear it (the self-extracting loader leaves its own values).
+    lda #0
+    ldx #$8f - $02
+!:  sta $02, x
+    dex
+    bpl !-
     // Variables live in a virtual segment at $a000-$bfff: clear it (RAM under BASIC ROM).
     lda #$36
     sta $01

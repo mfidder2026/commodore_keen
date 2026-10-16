@@ -86,8 +86,14 @@ def build(defines: list[str] = (), name: str | None = None) -> Path:
     prg = out / tc.PRG_NAME
     if not prg.is_file():
         raise SystemExit(f"expected {prg} after assembly")
+    # The program on disk is a self-extracting Exomizer file: about half the loading time.
+    sfx = out / "keen-sfx.prg"
+    result = tc.run([tc.exomizer(), "sfx", "sys", "-q", "-o", sfx, prg], capture_output=True, text=True)
+    if result.returncode != 0:
+        sys.stderr.write(result.stdout + result.stderr)
+        raise SystemExit("exomizer sfx failed")
     d64 = out / (name or tc.D64_NAME)
-    make_d64(prg, d64, {disk: CRUNCHED / file for disk, file in DISK_FILES.items()})
+    make_d64(sfx, d64, {disk: CRUNCHED / file for disk, file in DISK_FILES.items()})
     return d64
 
 
