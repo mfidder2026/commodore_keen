@@ -111,6 +111,12 @@ title_screen:
     ldx #<disclaimer3
     ldy #>disclaimer3
     jsr print_centred
+    lda #14
+    sta text_colour
+    lda #16
+    ldx #<keys_text
+    ldy #>keys_text
+    jsr print_centred
     jsr print_controls
     lda #1
     sta text_colour
@@ -365,6 +371,8 @@ alt_controls2:   .text "         SPACE: POGO          "
                  .byte 0
 control_lines:   .word controls1, controls2, controls3, controls4
                  .word alt_controls1, alt_controls2, controls3, controls4
+keys_text:       .text "KEYS: W A S D, RETURN = FIRE"
+                 .byte 0
 press_fire_text: .text "PRESS FIRE"
                  .byte 0
 status_title:    .text "STATUS"

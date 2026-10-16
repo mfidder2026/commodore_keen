@@ -1,6 +1,9 @@
-// Input: joystick in port 2 plus space and RUN/STOP, read directly from CIA1.
+// Input: joystick in port 2 plus space and RUN/STOP, read directly from CIA1, and the
+// keyboard as a second joystick: W A S D for the directions, RETURN for fire.
 // Result in `joy` (1 = pressed), `joy_new` = pressed since the previous tick.
 // Test builds (INPUTSCRIPT) replay a scripted table instead.
+//
+// The keyboard scan is in game/keys.asm.
 
 .const JOY_UP    = %00000001
 .const JOY_DOWN  = %00000010
@@ -44,8 +47,8 @@ input_read:
     lda joy
     ora #KEY_STOP
     sta joy
-!:  lda #$ff
-    sta $dc00
+!:  jsr keys_scan
+    jsr keys_decode
 #endif
     lda joy_prev
     eor #$ff

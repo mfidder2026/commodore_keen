@@ -65,13 +65,21 @@ def test_shot_kills_yorp():
     assert m.mpu.memory[m.labels["ammo"]] == 4
 
 
-def test_vorticon_needs_four_shots():
-    m = setup(T_VORT)
-    for n in range(3):
+def test_vorticon_needs_four_hits():
+    # The Vorticon jumps towards Keen now and then, so not every shot hits: count hits.
+    m = setup(T_VORT, ammo=20)
+    hp = m.mpu.memory[m.labels["act_hp"]]
+    hits = 0
+    for _ in range(20):
         fire(m)
-        assert state(m) != S_DEAD, f"dead after {n + 1} shots"
-    fire(m)
-    assert state(m) == S_DEAD
+        now = m.mpu.memory[m.labels["act_hp"]]
+        if now < hp or state(m) == S_DEAD:
+            hits += 1
+        hp = now
+        if state(m) == S_DEAD:
+            break
+        assert hits < 4, "still alive after four hits"
+    assert state(m) == S_DEAD and hits == 4
 
 
 def test_butler_absorbs_shots():

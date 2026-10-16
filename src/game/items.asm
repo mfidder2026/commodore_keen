@@ -43,8 +43,12 @@ items_level_start:
     sta keycards
     rts
 
-// Check the tiles that overlap Keen's box. Sets play_result for death and exit.
+// Check the tiles that overlap Keen's box. Sets play_result for death and exit. The
+// exit counts after all touched tiles, so an item touched in the same tick is collected
+// (level 16: the everclear lies right next to the exit).
 player_touch:
+    lda #0
+    sta touch_exit
     PixelsOf(p_x, box_left)
     PixelsOf(p_y, box_top)
     TileOf(box_left, KEEN_BOX_LEFT, touch_col0)
@@ -72,6 +76,10 @@ touch_next:
     cmp touch_row1
     inc t_row
     bcc touch_row
+    lda touch_exit
+    beq touch_done
+    lda #RESULT_EXIT
+    sta play_result
 touch_done:
     rts
 
@@ -86,8 +94,7 @@ touch_behaviour:
     rts
 !:  cmp #BEH_EXIT
     bne !+
-    lda #RESULT_EXIT
-    sta play_result
+    sta touch_exit                // non-zero: applied after the other tiles
     rts
 !:  cmp #BEH_POINTS500
     bcc touch_ignore              // doors are handled by door_blocked
@@ -307,5 +314,6 @@ touch_col0: .byte 0
 touch_col1: .byte 0
 touch_row0: .byte 0
 touch_row1: .byte 0
+touch_exit: .byte 0
 door_row:   .byte 0
 door_scan:  .byte 0

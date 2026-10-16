@@ -21,16 +21,20 @@ python tools/deploy.py       # start on a C64 Ultimate (C64U_HOST=<ip>)
 
 `python -m tools.convert` writes inspection images of the original to `build/original/`. `python -m tools.convert.export` writes the C64 assets to `build/assets/`.
 
-## Controls (joystick in port 2)
+## Controls (joystick in port 2, or the keyboard)
 
-| Action | Control |
-| --- | --- |
-| Walk | left / right |
-| Jump | up |
-| Shoot | fire |
-| Pogo on/off | down + fire, or space |
-| Enter a level (map) | fire |
-| Status and pause | RUN/STOP |
+| Action | Joystick | Keyboard |
+| --- | --- | --- |
+| Walk | left / right | A / D |
+| Jump | up | W |
+| Shoot | fire | RETURN |
+| Pogo on/off | down + fire, or space | S + RETURN, or space |
+| Enter a level (map) | fire | RETURN |
+| Status and pause | RUN/STOP | RUN/STOP |
+
+The keys act as a second joystick (W A S D = up, left, down, right; RETURN = fire), so
+they follow the layout chosen with F1 on the title screen. Use the joystick or the keys:
+joystick 2 shares lines with the keyboard, and both at once can give ghost key presses.
 
 ## Structure
 

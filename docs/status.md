@@ -15,7 +15,7 @@ Last update: 16 October 2026 (night session).
 | M6 Enemies | done; **behaviour is an estimate** | `test_actors.py`, frame rate test |
 | M7 Map and flow | done; full playthrough proven for part of the levels only (see below) | `test_flow.py` |
 | M8 Sound | effects done; **no music** (needs tunes with permission) | `test_sound.py` |
-| M9 Polish | partly: sfx main program, README, three engine bugs fixed (raster IRQ line, zero page, SID read) | — |
+| M9 Polish | partly: sfx main program, README, alternative control layout (F1), engine bugs fixed (raster IRQ line, zero page, SID read, camera clamp) | `test_controls.py` |
 | M10 NTSC | done in VICE: detection, equal game speed (5 ticks per 6 frames), sound tempo and pitch, faster colour update. Not on a real NTSC machine | `test_scroll.py` and the frame rate test on PAL and NTSC |
 
 ## NTSC
@@ -37,9 +37,20 @@ The first colour RAM update (17,800 cycles) was longer than an NTSC frame. The u
 - Animated tiles all run in phase; foreground tiles are not drawn in front of sprites.
 - Yorp statues (message tiles), light switches and in-level teleporters are not implemented.
 - Short jumps are not possible (jump height is fixed); not yet compared with the original.
-- Highscores are not saved; no option for the alternative control layout yet.
+- Highscores are not saved. The alternative control layout (fire jumps) is chosen with F1 on the title screen.
+- Keyboard: W A S D and RETURN act as a second joystick (tested in py65 on the decoding; the CIA scan itself only on paper, from the C64-Wiki matrix). Joystick and keys at the same time can give ghost keys.
+- An item touched in the same tick as the exit is now collected before the level ends (level 16: the everclear lies right next to the exit). The original's order is not checked against the source.
 - The map Keen collides only with his feet (more forgiving than the full sprite).
 
 ## Playability evidence
 
-`tools/bot_all.py` lets a simple bot (walk right, jump at obstacles) play every level in py65 with the real game code. It finishes levels 1, 2, 5 and 6; the others need routes to the left, keycards, the pogo stick or getting past enemies, which this bot cannot do. That does not mean those levels are unbeatable, but it is not proven yet.
+`tools/planner.py` searches joystick input with the real game code in py65; the routes replay identically in VICE (`tests/scenarios/test_routes.py`).
+
+| Levels | Result |
+| --- | --- |
+| 1, 2, 3, 5, 6, 7, 8, 9, 10, 11 | finished from a fresh game, replayed in VICE without losing a life |
+| 4 | finished with ammunition carried in (a Garg blocks the way otherwise) |
+| 13, 14, 16 | finished with the pogo stick (and ammunition) carried in, in py65 |
+| 12, 15 | no route found yet (search limit) |
+
+`tools/episode.py` chains the world map and levels 1, 3, 4, 5, 7, 8, 16 with the carried state (raygun shots from levels 1 and 3, the pogo stick from level 5). Levels 1-8 are planned with three ship parts and all lives. **Open:** level 16 with the everclear. The everclear lies in a one-tile pocket next to the exit that is only reachable from the open column above the exit; the search has not found that route yet, so the full playthrough (`tests/scenarios/test_episode.py`) has not run in VICE.

@@ -27,6 +27,7 @@
 #import "game/text.asm"
 #import "game/map.asm"
 #import "game/flow.asm"
+#import "game/keys.asm"
 
 .encoding "petscii_upper"
 

@@ -76,6 +76,19 @@ def test_deadly_tile_kills(built_d64, episode):
     assert m.mpu.memory[m.labels["play_result"]] == 1
 
 
+def test_item_and_exit_in_the_same_tick(built_d64, episode):
+    # Level 16: the everclear lies right next to the exit; Keen touching both collects
+    # the ship part and finishes the level.
+    level, info = episode.levels[16], episode.tileinfo
+    [(col, row, _)] = find(level, info, {14})
+    assert info[level.tiles[row][col + 1]].behaviour == 17      # exit to the right
+    m = start(16)
+    place(m, (col + 1) * 16 - 11, row * 16 + 7)    # box: columns col..col+1, rows row-1..row
+    m.call("player_touch")
+    assert m.mpu.memory[m.labels["ship_parts"]] == 8           # everclear bit
+    assert m.mpu.memory[m.labels["play_result"]] == 2          # exit
+
+
 def door_setup(keycard: bool):
     # Level 4: door 1 at column 31, rows 4-5, in a passage Keen jumps into.
     # Keen is put in the passage (box rows 4-5), right next to the door, moving right.

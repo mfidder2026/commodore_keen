@@ -12,7 +12,9 @@ A PAL frame is 63 × 312 = 19,656 cycles. The design budget is in PLAN.md under 
 
 ## NTSC (M10)
 
-NTSC frames have 17,095 cycles. The game runs 5 ticks per 6 frames, so it plays at the same speed. Scroll test on NTSC: 0 lost frames, same lag as PAL, screen pixel-exact. Level 14 with many enemies: a few iterations take 3 frames (20 fps), 75 frames lost in about 1,080 (PAL: at most 2 frames, 11 lost).
+NTSC frames have 17,095 cycles. The game runs 5 ticks per 6 frames, so it plays at the same speed. Scroll test on NTSC: 0 lost frames, same lag as PAL, screen pixel-exact. Level 14 with many enemies: a few iterations take 3 frames (20 fps), 70 frames lost in about 1,080 (PAL: at most 2 frames, 14 lost; 16 October, after the keyboard and the exit-after-items change).
+
+**Alignment matters in level 14.** The margin there is thin: shifting `game/actors.asm` by 0-224 bytes gives PAL results between 2 frames / 14 lost and 3 frames / 24 lost (measured in 32-byte steps), because page crossings in the actor code (indexed reads, taken branches) add up over 30 actors. Page-aligning the collision box tables alone did not help. New code therefore goes after the game code (like `game/keys.asm`), and `test_frame_rate_with_many_enemies` guards the result. Finding the exact hot spot (`tools/pcsample.py`) is still open.
 
 Scroll test path: 410 frames at up to 3 px per frame horizontally and 1 px vertically. **0 frames lost.** In 28 frames the screen showed the nearest position the front buffer allowed (the camera waited one frame for the back buffer).
 
