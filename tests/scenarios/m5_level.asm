@@ -43,6 +43,15 @@ level_test:
     sta lt_stats + 13
     lda perf_out_max + 1
     sta lt_stats + 14
+    lda perf_max_at
+    sta lt_stats + 15
+    lda perf_max_at + 1
+    sta lt_stats + 16
+    ldx #31
+!:  lda perf_history, x
+    sta lt_history, x
+    dex
+    bpl !-
     lda #<lt_stats
     sta save_from
     lda #>lt_stats
@@ -79,5 +88,6 @@ record_tick:
 .segment Vars
 // result, score (3, BCD), lives, ammo, ship parts, keycards, max frames per
 // iteration, lost frames (2)
-lt_stats:    .fill 15, 0
+lt_stats:    .fill 17, 0
+lt_history:  .fill 32, 0          // frames per iteration, first 32 iterations
 lt_stats_end:

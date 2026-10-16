@@ -20,13 +20,13 @@ OUT = tc.BUILD / "test"
 JOY_UP, JOY_RIGHT, JOY_FIRE = 1, 8, 16
 
 
-def run_script(level: int, script: list[tuple[int, int]], tag: str, extra=()) -> dict:
+def run_script(level: int, script: list[tuple[int, int]], tag: str, extra=(), system="pal") -> dict:
     lines = [f".const SCRIPT_LEVEL = {level}", "input_script:"]
     lines += [f"    .byte {n}, {joy}" for n, joy in script] + ["    .byte 0"]
     (tc.BUILD / "generated" / "gen_script.asm").write_text("\n".join(lines) + "\n")
     from build import build
     d64 = build(["LEVELTEST", "INPUTSCRIPT", *extra])
-    run = run_vice(["-default", "-pal", "-warp",
+    run = run_vice(["-default", f"-{system}", "-warp",
                   "-sounddev", "dummy", "-debugcart", "-limitcycles", 300_000_000,
                   "-autostart", d64], timeout=900)
     stats = OUT / f"{tag}_stats.prg"
@@ -35,7 +35,7 @@ def run_script(level: int, script: list[tuple[int, int]], tag: str, extra=()) ->
     tc.run([tc.vice_bin("c1541"), "-attach", d64, "-read", "stats", stats], capture_output=True)
     raw = stats.read_bytes()[2:] if stats.is_file() else b""
     assert len(raw) >= 11, f"no statistics (VICE exit {run.returncode})"
-    return {"exit_code": run.returncode, "result": raw[0], "score": raw[1:4], "lives": raw[4],
+    return {"system": system, "exit_code": run.returncode, "result": raw[0], "score": raw[1:4], "lives": raw[4],
             "max_frames": raw[8], "lost": struct.unpack_from("<H", raw, 9)[0]}
 
 
@@ -75,13 +75,18 @@ def test_no_life_lost(level1):
     assert stats["lives"] == 4
 
 
-@pytest.fixture(scope="module")
-def busy_level(prerequisites):
+BUSY_SCRIPT = [(40, JOY_RIGHT), (20, JOY_RIGHT | JOY_UP), (5, JOY_RIGHT | JOY_FIRE)] * 13 + [(5, 0)]
+
+
+@pytest.fixture(scope="module", params=["pal", "ntsc"])
+def busy_level(request, prerequisites):
     # walk right, jumping and shooting now and then, for 900 ticks
-    script = [(40, JOY_RIGHT), (20, JOY_RIGHT | JOY_UP), (5, JOY_RIGHT | JOY_FIRE)] * 13 + [(5, 0)]
-    return run_script(14, script, "m6", ["GODMODE"])
+    return run_script(14, BUSY_SCRIPT, f"m6_{request.param}", ["GODMODE"], request.param)
 
 
 def test_frame_rate_with_many_enemies(busy_level):
     assert busy_level["result"] == 3, busy_level        # whole script played (GODMODE)
-    assert busy_level["max_frames"] <= 2, busy_level       # never below 25 fps
+    # PAL: never below 25 fps (2 frames). NTSC has 13 % less time per frame; in this busy
+    # level it reaches 3 frames now and then (20 fps); see docs/budget.md.
+    limit = 2 if busy_level["system"] == "pal" else 3
+    assert busy_level["max_frames"] <= limit, busy_level

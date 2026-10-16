@@ -30,8 +30,10 @@ scroll_test:
     jsr render_row
     TimerRead(tm_end)
     TimerMax(tm_start, tm_end, stat_row_cycles)
+    lda #0
+    jsr colour_fast_target
     TimerRead(tm_start)
-    jsr colour_screen_a
+    jsr colour_fast
     TimerRead(tm_end)
     TimerMax(tm_start, tm_end, stat_colour_cycles)
     jsr scroll_init               // undo the test row render

@@ -170,6 +170,9 @@ need_other:
     cmp target_cy
     bne !+
     jsr shown_from_camera
+    lda front_buf                 // the fast colour code must read the incoming buffer
+    eor #1
+    jsr colour_fast_target
     lda #1
     sta swap_req                  // IRQ swaps and applies the fine scroll together
     jmp scroll_done
@@ -518,8 +521,7 @@ row_hi_b: .fill ROWS, >(SCREEN_B + i * COLS)
     rts
 }
 
-colour_screen_a: ColourFromScreen(SCREEN_A)
-colour_screen_b: ColourFromScreen(SCREEN_B)
+colour_screen_a: ColourFromScreen(SCREEN_A)     // level start (not time critical)
 
 // Called from the raster IRQ when swap_req is set.
 do_swap:
@@ -533,7 +535,7 @@ do_swap:
     sta $d016
     lda shown_d011
     sta $d011
-    jsr colour_screen_b
+    jsr colour_fast
     jmp !++
 !:  lda #D018_SCREEN_A
     sta $d018
@@ -541,7 +543,7 @@ do_swap:
     sta $d016
     lda shown_d011
     sta $d011
-    jsr colour_screen_a
+    jsr colour_fast
 !:  lda target_cx
     sta front_cx
     lda target_cx + 1

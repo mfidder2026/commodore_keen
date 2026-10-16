@@ -7,8 +7,12 @@ A PAL frame is 63 × 312 = 19,656 cycles. The design budget is in PLAN.md under 
 | Part | Measured | Notes |
 | --- | --- | --- |
 | Render one row of the back buffer | 994 cycles | 25 rows = ~25,000 cycles per coarse step, spread over the free time of several frames |
-| Colour RAM from screen RAM (in the IRQ at line 251) | 17,568 cycles | stays ahead of the beam: row 24 must be done by 19,152 cycles after line 251 |
+| Colour RAM from screen RAM (in the IRQ at line 251) | 14,486 cycles (PAL), 14,892 (NTSC) | code generated at startup at `$A600`, 13 cycles per character; stays ahead of the beam (row 24 deadline: 19,152 PAL, 16,575 NTSC). First version: 17,568, too slow for NTSC |
 | Swap + fine scroll + sprite registers | < 400 cycles | every frame |
+
+## NTSC (M10)
+
+NTSC frames have 17,095 cycles. The game runs 5 ticks per 6 frames, so it plays at the same speed. Scroll test on NTSC: 0 lost frames, same lag as PAL, screen pixel-exact. Level 14 with many enemies: a few iterations take 3 frames (20 fps), 75 frames lost in about 1,080 (PAL: at most 2 frames, 11 lost).
 
 Scroll test path: 410 frames at up to 3 px per frame horizontally and 1 px vertically. **0 frames lost.** In 28 frames the screen showed the nearest position the front buffer allowed (the camera waited one frame for the back buffer).
 

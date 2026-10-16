@@ -19,6 +19,7 @@ map_frame:
     bcc !+
     lda #MAX_TICKS_PER_FRAME
 !:  sta ticks_due
+    tax                           // sta does not set Z: test the tick count
     beq map_output
 !:  jsr map_tick
     lda map_result

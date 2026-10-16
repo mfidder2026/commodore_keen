@@ -40,6 +40,7 @@ play_loop:
     bcc !+
     lda #MAX_TICKS_PER_FRAME
 !:  sta ticks_due
+    tax                           // sta does not set Z: test the tick count
     beq play_output
 !:
 #if INPUTSCRIPT
@@ -75,9 +76,29 @@ play_done:
 // In: A = frames since the last iteration. Keeps A.
 perf_count:
     pha
+#if INPUTSCRIPT
+    ldx perf_iterations + 1       // test builds: frames of the first 32 iterations
+    bne !+
+    ldx perf_iterations
+    cpx #32
+    bcs !+
+    sta perf_history, x
+!:
+#endif
+    inc perf_iterations
+    bne !+
+    inc perf_iterations + 1
+!:  pla
+    pha
     cmp perf_max_frames
     bcc !+
     sta perf_max_frames
+    lda perf_iterations           // remember when the longest iteration happened
+    sta perf_max_at
+    lda perf_iterations + 1
+    sta perf_max_at + 1
+    pla
+    pha
 !:  sec
     sbc #1
     clc
@@ -208,4 +229,7 @@ perf_lost:     .word 0
 perf_tick_max: .word 0              // test builds: longest game tick in cycles
 perf_out_max:  .word 0              // test builds: longest frame output without rendering
 perf_t0:       .word 0
+perf_iterations: .word 0
+perf_max_at:   .word 0             // iteration number of the longest one
+perf_history:  .fill 32, 0
 perf_t1:       .word 0
