@@ -39,16 +39,28 @@ ACTIONS = [
 ]
 
 
+CARRIED = ("score", "lives", "ammo", "ship_parts", "next_life")   # labels; plus p_has_pogo ($4f)
+
+
 class Game:
-    def __init__(self, number: int):
+    def __init__(self, number: int, carry: dict | None = None):
+        """carry: game state from earlier levels (see carried_state)."""
         from tools.convert import original
         self.m = Machine()
         self.m.load(tc.BUILD / "assets" / f"l{number:02d}.prg")
-        for routine in ("level_init", "anim_init", "game_new", "items_level_start", "actors_init",
-                        "player_init", "camera_center", "scroll_init"):
-            self.m.call(routine)
+        self.m.call("game_new")
         self.mem = self.m.mpu.memory
         self.L = self.m.labels
+        if carry:
+            for name, value in carry.items():
+                if name == "p_has_pogo":
+                    self.mem[0x4F] = value[0]
+                else:
+                    a = self.L[name]
+                    self.mem[a:a + len(value)] = list(value)
+        for routine in ("level_init", "anim_init", "items_level_start", "actors_init",
+                        "player_init", "camera_center", "scroll_init"):
+            self.m.call(routine)
         self.mem[self.L["play_result"]] = 0
         ep = original.load()
         self.level = ep.levels[number]
@@ -148,14 +160,24 @@ class Game:
             best = min(best, to_key + after + 5)
         return best
 
+    def carried_state(self) -> dict:
+        state = {"p_has_pogo": bytes([self.mem[0x4F]])}
+        sizes = {"score": 3}
+        for name in CARRIED:
+            a = self.L[name]
+            state[name] = bytes(self.mem[a:a + sizes.get(name, 1)])
+        return state
+
     def key(self):
         x, y = self.keen()
         m = self.mem
         return (int(x) // 8, int(y) // 8, m[0x36], m[0x3A], m[self.L["keycards"]], m[0x4F])
 
 
-def plan(number: int, max_nodes: int = 4000, verbose: bool = True):
-    game = Game(number)
+def plan(number: int, max_nodes: int = 4000, verbose: bool = True, carry: dict | None = None):
+    """Returns the input list that reaches the exit, or None. With carry, the level
+    starts with that game state (score, lives, ammo, pogo stick, ship parts)."""
+    game = Game(number, carry)
     counter = itertools.count()
     start = game.snapshot()
     frontier = [(game.distance(), next(counter), start, [])]
@@ -173,6 +195,7 @@ def plan(number: int, max_nodes: int = 4000, verbose: bool = True):
             if result == RESULT_EXIT:
                 if verbose:
                     print(f"level {number}: exit after {len(route)} ticks, {nodes} nodes")
+                plan.final_state = game.carried_state()
                 return route
             if result == RESULT_DIED:
                 continue

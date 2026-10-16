@@ -262,6 +262,9 @@ game_over:
     jmp wait_fire
 
 the_end:
+#if FLOWTEST
+    jmp flow_won                  // test build: the end reached, save the state
+#endif
     jsr text_begin
     lda #7
     sta text_colour

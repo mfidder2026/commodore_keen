@@ -11,6 +11,10 @@ flow_test:
     jsr script_start
     jmp game_main
 
+flow_won:
+    lda #1
+    sta ft_stats + 13
+    // fall through
 script_finished:
     ldx #2
 !:  lda levels_done, x
@@ -33,6 +37,8 @@ script_finished:
     sta ft_stats + 11
     lda current_level
     sta ft_stats + 12
+    lda ship_parts
+    sta ft_stats + 14
     lda #<ft_stats
     sta save_from
     lda #>ft_stats
@@ -58,5 +64,5 @@ record_tick:
 
 .segment Vars
 // levels done (3), score (3), lives, keen x (2), keen y (2), map mode, current level
-ft_stats:    .fill 13, 0
+ft_stats:    .fill 15, 0           // ..., won (the end reached), ship parts
 ft_stats_end:

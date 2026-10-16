@@ -180,8 +180,10 @@ barrier_attr:
     lda barrier_y, y
     cmp t_row
     bne barrier_next
+    sty barrier_index             // level_is_done uses X and Y
     lda barrier_level, y
     jsr level_is_done
+    ldy barrier_index
     bcs barrier_next
     pla
     tay
@@ -507,6 +509,7 @@ spot_code:     .fill MAX_MAP_SPOTS, 0
 spot_x:        .fill MAX_MAP_SPOTS, 0
 spot_y:        .fill MAX_MAP_SPOTS, 0
 barrier_count: .byte 0
+barrier_index: .byte 0
 barrier_level: .fill MAX_BARRIERS, 0
 barrier_x:     .fill MAX_BARRIERS, 0
 barrier_y:     .fill MAX_BARRIERS, 0

@@ -15,8 +15,15 @@ Last update: 16 October 2026 (night session).
 | M6 Enemies | done; **behaviour is an estimate** | `test_actors.py`, frame rate test |
 | M7 Map and flow | done; full playthrough proven for part of the levels only (see below) | `test_flow.py` |
 | M8 Sound | effects done; **no music** (needs tunes with permission) | `test_sound.py` |
-| M9 Polish | partly: sfx main program, README, two engine bugs fixed | — |
-| M10 NTSC | not started | — |
+| M9 Polish | partly: sfx main program, README, three engine bugs fixed (raster IRQ line, zero page, SID read) | — |
+| M10 NTSC | partly: detection, equal game speed (5 ticks per 6 frames), sound tempo and pitch. **Scrolling on NTSC is not good yet** (see below) | NTSC run in VICE |
+
+## NTSC: the open problem
+
+On NTSC a frame has 17,095 cycles (PAL 19,656) and the vertical blank is much shorter. The colour RAM update at every coarse scroll step costs about 17,800 cycles. On NTSC that is longer than a whole frame, so it loses the race with the beam: scrolling on NTSC drops frames, and for one frame at each coarse step the lower part of the screen has wrong colours. Measured: 91 lost frames in the 410-frame scroll test (PAL: 0). Two ways out, a design choice for you:
+
+1. A fully unrolled colour update (about 13 cycles per character instead of 16.5). That needs about 3 KB of extra code, so part of the program has to move from below `$5000` to `$A600-$AFFF`.
+2. On NTSC only: the plan's fallback, one fixed colour per level in colour RAM (fewer colours, but no colour updates at all).
 
 ## Waiting on your decision or approval
 

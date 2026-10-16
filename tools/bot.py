@@ -92,6 +92,7 @@ class MapWalker:
             self.m.call(routine)
         mem, L = self.m.mpu.memory, self.m.labels
         mem[L["map_mode"]] = 1
+        mem[L["teleport_lock"]] = 1               # as map_enter: no teleport where Keen starts
         for n in done_levels:
             mem[L["levels_done"] + (n - 1) // 8] |= 1 << ((n - 1) % 8)
         if keen is None:
@@ -159,10 +160,43 @@ class MapWalker:
         for routine in ("map_move", "camera_follow", "map_spots"):
             self.m.call(routine)
 
+    def path_exists(self, goal):
+        try:
+            self.path(goal)
+            return True
+        except SystemExit:
+            return False
+
+    TELEPORTERS = (38, 41, 46)
+
+    def go_to(self, goal, hops=4):
+        """Walk to goal, using teleporters when it lies in another region."""
+        for _ in range(hops + 1):
+            if self.path_exists(goal):
+                if self.walk_to(goal):
+                    return
+                continue                                 # teleported on the way: plan again
+            here = self.centre_tile()
+            options = [p for code in self.TELEPORTERS for p in self.spots.get(code, [])
+                       if self.path_exists(p)]
+            if not options:
+                raise SystemExit(f"no way from {here} to {goal}")
+            target = min(options, key=lambda p: len(self.path(p)))
+            if target == here:                           # standing on it: step off first
+                for n in ((here[0] + 1, here[1]), (here[0] - 1, here[1]),
+                          (here[0], here[1] + 1), (here[0], here[1] - 1)):
+                    if self.walkable(*n):
+                        self.walk_to(n)
+                        break
+            self.walk_to(target)
+        raise SystemExit(f"could not reach {goal}")
+
     def walk_to(self, goal, max_ticks=4000):
-        """Follow the tile path; steer Keen's centre to each tile centre."""
+        """Follow the tile path; steer Keen's centre to each tile centre.
+        Returns False when Keen was teleported on the way (the walk stops there)."""
         for tx, ty in self.path(goal):
             for _ in range(max_ticks):
+                before = self.centre_tile()
                 x, y = self.keen()
                 cx, cy = x, y                      # sprite position
                 tcx, tcy = tx * 16 + 2, ty * 16 - 4    # feet box inside the tile
@@ -178,8 +212,12 @@ class MapWalker:
                 if not joy:
                     break
                 self.tick(joy)
+                after = self.centre_tile()
+                if abs(after[0] - before[0]) + abs(after[1] - before[1]) > 2:
+                    return False                         # teleported
             else:
                 raise SystemExit(f"stuck walking to {(tx, ty)} at {self.keen()}")
+        return True
 
     def press_fire(self):
         """Release, then fire. The game stops reading map input in the tick that
