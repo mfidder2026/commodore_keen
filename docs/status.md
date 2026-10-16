@@ -1,6 +1,6 @@
 # Status
 
-Last update: 16 October 2026 (night session).
+Last update: 16 October 2026.
 
 ## Milestones
 
@@ -53,4 +53,4 @@ The first colour RAM update (17,800 cycles) was longer than an NTSC frame. The u
 | 13, 14, 16 | finished with the pogo stick (and ammunition) carried in, in py65 |
 | 12, 15 | no route found yet (search limit) |
 
-`tools/episode.py` chains the world map and levels 1, 3, 4, 5, 7, 8, 16 with the carried state (raygun shots from levels 1 and 3, the pogo stick from level 5). Levels 1-8 are planned with three ship parts and all lives. **Open:** level 16 with the everclear. The everclear lies in a one-tile pocket next to the exit that is only reachable from the open column above the exit; the search has not found that route yet, so the full playthrough (`tests/scenarios/test_episode.py`) has not run in VICE.
+`tools/episode.py` chains the world map and levels 1, 3, 4, 5, 7, 8, 16 with the carried state (raygun shots from levels 1 and 3, the pogo stick from level 5). Levels 1-8 are planned with three ship parts and all lives. **Blocking:** level 16 with the everclear. The everclear (103,10) lies in a one-tile pocket next to the exit (104,9-10); the pocket is only reachable through the open column above the exit, and the corridor to its left is one tile high with deadly tiles. A brute-force test (Keen dropped from every free position above the exit, with many joystick sequences, with and without pogo) always touches the exit before the everclear, so with the C64 version's touch rules the everclear cannot be collected. The original must end the level differently (e.g. only when Keen is fully inside the exit, or on the ground). That rule has to come from the reconstructed source (`reference/keen13-src`, download not yet approved); until then the full playthrough (`tests/scenarios/test_episode.py`) cannot run.
